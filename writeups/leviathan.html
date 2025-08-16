@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🐍 Leviathan Walkthrough | Hack This and That</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@400;700&family=IBM+Plex+Mono&display=swap">
+  <meta name="description" content="A walkthrough of the Leviathan wargame from OverTheWire with solutions and flags.">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../" class="back-link">Go back</a>
+      <p class="post-date">Posted on April 14, 2025</p>
+      <h1>🐍 Leviathan CTF Walkthrough</h1>
+      <p class="subtitle">OverTheWire Wargame Challenge Solutions</p>
+    </header>
+
+    <main>
+      <article>
+
+        <div class="challenge-info">
+          <p>Leviathan is a wargame on <a href="https://overthewire.org/wargames/leviathan/" target="_blank">OverTheWire</a> that doesn't require programming — just Linux terminal skills.</p>
+        </div>
+
+        <section class="level-solution">
+          <h2>leviathan0</h2>
+          <p>Ran <code>ls -la</code> and found a hidden file: <code>bookmarks.html</code>. Opened it with <code>less</code> and searched for "password" — boom, there it was.</p>
+          <div class="flag-container">
+            🚩 <code>3QJ3TgzHDq</code>
+          </div>
+          <p class="what">🤔 What did I learn:</p>
+          <p><code>less</code> lets me scroll and search inside files. Way better than <code>cat</code> which, dumps everything.</p>
+        </section>
+        
+        <section class="level-solution">
+          <h2>leviathan1</h2>
+          <p>Found a file called <code>check</code> — couldn’t read it with <code>cat</code>. Ran <code>ltrace ./check</code> and saw it was comparing my input with the word <code>sex</code>. Typed that in and it worked.</p>
+          <div class="flag-container">
+            🚩 <code>NsN1HwFoyN</code>
+          </div>
+          <p class="what">🤔 What did I learn:</p>
+          <p><code>ltrace</code> shows what a program is doing with your input — like comparing passwords or opening files.</p>
+        </section>
+        
+        <section class="level-solution">
+          <h2>leviathan2</h2>
+          <p>Used a symlink to trick the program into reading a restricted file. Linked <code>/etc/leviathan_pass/leviathan3</code> to a fake filename and passed it to the program.</p>
+          <div class="flag-container">
+            🚩 <code>f0n8h2iWLP</code>
+          </div>
+          <p class="what">🤔 What did I learn:</p>
+          <p>Symbolic links are like shortcuts, but they point to the original file or directory. When a program interacts with the symlink, it’s actually accessing the original file. This can be used to trick programs into accessing something they normally wouldn’t, depending on their permissions.</p>
+        </section>
+        
+        <section class="level-solution">
+          <h2>leviathan3</h2>
+          <p>Ran <code>ltrace ./level3</code> and saw: <code>strcmp("h0no33", "snlprint")</code>. Entered <code>snlprint</code>, and it worked.</p>
+          <div class="flag-container">
+            🚩 <code>WG1egElCvO</code>
+          </div>
+          <p class="what">🤔 What did I learn:</p>
+          <p><code>strcmp()</code> should not be used for authentication 😂</p>
+        </section>
+        
+        <section class="level-solution">
+          <h2>leviathan4</h2>
+          <p>Used <code>ls -la</code>, found a hidden <code>.trash</code> directory. Inside was a binary file. Ran it, and it outputted binary data. Used an online binary-to-text converter to get the flag.</p>
+          <div class="flag-container">
+            🚩 <code>0dyxT7F4QD</code>
+          </div>
+        </section>
+        
+        <section class="level-solution">
+          <h2>leviathan5</h2>
+          <p>Created a symlink in <code>/tmp/file.log</code> pointing to <code>/etc/leviathan_pass/leviathan6</code>. Ran <code>~/leviathan5</code> and got the flag.</p>
+          <div class="flag-container">
+            🚩 <code>szo7HDB88w</code>
+          </div>
+        </section>
+        
+        <section class="level-solution">
+          <h2>leviathan6</h2>
+          <p>Wrote a brute-force script to try every 4-digit PIN. Here’s the script:</p>
+          <pre><code>#!/bin/bash
+        for a in {0000..9999}
+        do
+          ~/leviathan6 $a
+        done</code></pre>
+        <p class="what">🤔 What did I learn:</p>
+        <p>Scripts are extremely useful for someone as lazy as I am.</p>
+          <div class="flag-container">
+            🚩 <code>qEs5Io5yM8</code>
+          </div>
+        </section>
+        
+        <section class="level-solution">
+          <h2>leviathan7</h2>
+          <p>Simply ran <code>cat CONGRATULATIONS</code> and found the flag.</p>
+          <div class="flag-container">
+            🚩 <code>f32hGS2Bdj</code>
+          </div>
+        </section>
+        
+
+      </article>
+    </main>
+
+    <footer>
+      <p>Created by <a href="https://github.com/jvandenhurk" target="_blank">jvandenhurk</a> • Hosted on GitHub Pages</p>
+      <p><small>Last updated: April 2025</small></p>
+    </footer>
+  </div>
+
+  <!-- Hide terminal icon on mobile -->
+  <style>
+    @media (max-width: 768px) {
+      .terminal-icon {
+        display: none;
+      }
+    }
+  </style>
+</body>
+</html>
