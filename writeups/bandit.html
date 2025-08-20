@@ -2,583 +2,737 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🦝 Bandit Walkthrough | Hack This and That</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bandit Walkthrough</title>
   <link rel="stylesheet" href="../assets/style.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@400;700&family=IBM+Plex+Mono&display=swap">
-  <meta name="description" content="A walkthrough of the Bandit wargame from OverTheWire with solutions and flags.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the OverTheWire Bandit wargame with detailed solutions, commands, and learning outcomes for each level.">
+  <meta name="keywords" content="bandit, overthewire, CTF, walkthrough, linux, cybersecurity, wargame, solutions">
+  <meta name="author" content="Justin Van Den Hurk">
 </head>
 <body>
   <div class="container">
     <header>
-      <a href="../" class="back-link">Go back</a>
-      <p class="post-date">Posted on April 23, 2025</p>
-      <h1>🦝 Bandit CTF Walkthrough</h1>
-      <p class="subtitle">OverTheWire Wargame Challenge Solutions</p>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>Bandit Walkthrough</h1>
+      <p class="subtitle">Levels 0 - 33 Solutions</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: April 23, 2025</span>
+          <span class="text-muted">Difficulty: Beginner</span>
+        </div>
+        <p>Bandit is a wargame on <a href="https://overthewire.org/wargames/bandit/" target="_blank" rel="noopener noreferrer">OverTheWire</a> that focuses on learning basic Linux skills, such as navigating the file system, using SSH, and working with permissions. This comprehensive walkthrough covers all levels with detailed explanations and learning outcomes.</p>
+      </div>
     </header>
+
+    <nav id="pre-security-nav">
+      <ul class="section-nav">
+        <li><a href="#level-0-9">Levels 0-9</a></li>
+        <li><a href="#level-10-19">Levels 10-19</a></li>
+        <li><a href="#level-20-29">Levels 20-29</a></li>
+        <li><a href="#level-30-33">Levels 30-33</a></li>
+      </ul>
+    </nav>
 
     <main>
       <article>
+        <section id="level-0-9">
+          <h2>Levels 0-9: Fundamentals</h2>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 0</h3>
+            <p><strong>Objective:</strong> Log in to the server and find the password for the next level.</p>
+            
+            <p>First, log in to the server:</p>
+            <pre><code>ssh bandit.labs.overthewire.org -p 2220 -l bandit0</code></pre>
+            <p>When prompted, enter the password: <code>bandit0</code></p>
+            
+            <p>Once logged in, run the following commands:</p>
+            <ul>
+              <li><code>ls</code> – lists files in the current directory</li>
+              <li><code>cat readme</code> – reads the contents of the file</li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>🚩: ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p><code>SSH</code> lets you connect to a remote device. <code>ls</code> lists directories, and <code>cat</code> reads file contents.</p>
+          </div>
 
-        <div class="challenge-info">
-          <p>Bandit is a wargame on <a href="https://overthewire.org/wargames/bandit/" target="_blank">OverTheWire</a> that focuses on learning basic Linux skills, such as navigating the file system, using SSH, and working with permissions.</p>
-        </div>
+          <div class="level-solution">
+            <h3>Bandit Level 1</h3>
+            <p><strong>Objective:</strong> Read a file with a special name that causes command interpretation issues.</p>
+            
+            <p>After logging in, list the files using <code>ls</code>.</p>
+            <p>You'll see a file named <code>-</code>.</p>
+            <p>A quick Google search reveals that running <code>cat -</code> treats <code>-</code> as standard input (stdin), not as a file.</p>
+            <p>To read the file correctly, specify the path to it by using this command:</p>
+            <pre><code>cat ./-</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 263JGJPfgU6LtdEvgfWU1XP5yac29mFx</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>When a file is named <code>-</code>, it's interpreted as stdin by default. Prepending <code>./</code> tells the shell it's a file in the current directory.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 2</h3>
+            <p><strong>Objective:</strong> Read a file with spaces in the filename.</p>
+            
+            <p>After logging in, use <code>ls</code> to list the files.</p>
+            <p>You'll see a file with spaces in its name: <code>spaces in this filename</code>.</p>
+            <p>To read it with <code>cat</code>, start typing <code>cat sp</code> and press <code>Tab</code> for auto-completion.</p>
+            <p>The command should look like this:</p>
+            <pre><code>cat spaces\ in\ this\ filename</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>When working with filenames that contain spaces, use escape characters (<code>\</code>) or auto-complete with <code>Tab</code> to avoid errors.</p>
+          </div>
 
-        <section class="level-solution">
-          <h2>Bandit0</h2>
-          <p>First, log in to the server:</p>
-          <div class="command">ssh bandit.labs.overthewire.org -p 2220 -l bandit0</div>
-          <p>When prompted, enter the password: <code>bandit0</code></p>
-          <p>Once logged in, run the following commands:</p>
-          <ul class="steps">
-            <li><code>ls</code> – lists files in the current directory</li>
-            <li><code>cat readme</code> – reads the contents of the file</li>
-          </ul>
-          <div class="flag-container">
-            🚩 <code>ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If</code>
+          <div class="level-solution">
+            <h3>Bandit Level 3</h3>
+            <p><strong>Objective:</strong> Find and read a hidden file.</p>
+            
+            <p>Use <code>ls</code> to find a file named <code>inhere</code>.</p>
+            <p>Change into that directory with <code>cd inhere</code>.</p>
+            <p>Run <code>ls</code> again and you won't see anything. Try <code>ls -a</code> to show all hidden files.</p>
+            <p>You'll find a file named <code>...Hiding-From-You</code>.</p>
+            <p>Read it using:</p>
+            <pre><code>cat ...Hiding-From-You</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 2WmrDFRmJIq3IPxneAaMGhap0pFhF3NJ</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Use <code>-a</code> with <code>ls</code> to list hidden files, and remember hidden files often start with a dot.</p>
           </div>
-          <p>🤔 What did I learn:</p>
-          <p><code>SSH</code> lets me connect to a remote device. <code>ls</code> lists directories, and <code>cat</code> reads file contents.</p>
-        </section>
 
-        <section class="level-solution">
-          <h2>Bandit1</h2>
-          <p>After logging in, list the files using <code>ls</code>.</p>
-        
-          <p>You’ll see a file named <code>-</code>.</p>
-          <p>A quick Google search reveals that running <code>cat -</code> treats <code>-</code> as standard input (stdin), not as a file.</p>
-          <p>To read the file correctly, specify the path to it by using this command: <code>cat ./-</code>.</p>
-        
-          <div class="flag-container">
-            🚩 <code>263JGJPfgU6LtdEvgfWU1XP5yac29mFx</code>
+          <div class="level-solution">
+            <h3>Bandit Level 4</h3>
+            <p><strong>Objective:</strong> Find the only human-readable file among several files.</p>
+            
+            <p>Navigate into the folder using <code>cd inhere</code>.</p>
+            <p>Run <code>file ./*</code> to display all files and their types.</p>
+            <p>You'll see that <code>-file07</code> is an ASCII text file.</p>
+            <p>Read it with:</p>
+            <pre><code>cat ./-file07</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 4oQYVPkxZOOEOO5pTW81FB8j8lxXGUQw</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Use <code>./</code> to reference files that start with a dash <code>-</code>, so commands interpret them as filenames, not options.</p>
           </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>When a file is named <code>-</code>, it’s interpreted as stdin by default. Prepending <code>./</code> tells the shell it's a file in the current directory.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit2</h2>
-          <p>After logging in, use <code>ls</code> to list the files.</p>
-          <p>You’ll see a file with spaces in its name: <code>spaces in this filename</code>.</p>
-          <p>To read it with <code>cat</code>, start typing <code>cat sp</code> and press <code>Tab</code> for auto-completion.</p>
-          <p>The command should look like this: <code>cat spaces\ in\ this\ filename</code></p>        
-          <div class="flag-container">
-            🚩 <code>MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>When working with filenames that contain spaces, use escape characters (<code>\</code>) or auto-complete with <code>Tab</code> to avoid errors.</p>
-        </section>
 
-        <section class="level-solution">
-          <h2>Bandit3</h2>
-          <p>Use <code>ls</code> to find a file named <code>inhere</code>.</p>
-          <p>Change into that directory with <code>cd inhere</code>.</p>
-          <p>Run <code>ls</code> again and you won’t see anything. Try <code>ls -a</code> to show all hidden files.</p>
-          <p>You’ll find a file named <code>...Hiding-From-You</code>.</p>
-          <p>Read it using <code>cat ...Hiding-From-You</code>.</p>
-          <div class="flag-container">
-            🚩 <code>2WmrDFRmJIq3IPxneAaMGhap0pFhF3NJ</code>
+          <div class="level-solution">
+            <h3>Bandit Level 5</h3>
+            <p><strong>Objective:</strong> Find a file with specific properties using the find command.</p>
+            
+            <p>Use <code>ls inhere</code> to explore the directory.</p>
+            <p>There are multiple files to search through.</p>
+            <p>There is a hint on the <a href="https://overthewire.org/wargames/bandit/bandit6.html" target="_blank" rel="noopener noreferrer">bandit6 page</a>.</p>
+            <p>Enter the directory by using <code>cd inhere</code></p>
+            <p>Use <code>find</code> with the following properties: human-readable, 1033 bytes in size, and not executable:</p>
+            <pre><code>find inhere -type f -size 1033c ! -executable</code></pre>
+            <p>The result will be <code>inhere/maybehere07/.file2</code>.</p>
+            <p>Read the file with:</p>
+            <pre><code>cat inhere/maybehere07/.file2</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: HWasnPhtq9AVKe0dmk45nxy20cvUa6EG</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Use <code>find</code> with specific file search criteria like size and executable status to narrow down results efficiently.</p>
           </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Use <code>-a</code> with <code>ls</code> to list hidden files, and remember hidden files often start with a dot.</p>
-        </section>
 
-        <section class="level-solution">
-          <h2>Bandit4</h2>
-          <p>Navigate into the folder using <code>cd inhere</code>.</p>
-          <p>Run <code>file ./*</code> to display all files and their types.</p>
-          <p>You’ll see that <code>-file07</code> is an ASCII text file.</p>
-          <p>Read it with <code>cat ./-file07</code>.</p>
-          <div class="flag-container">
-            🚩 <code>4oQYVPkxZOOEOO5pTW81FB8j8lxXGUQw</code>
+          <div class="level-solution">
+            <h3>Bandit Level 6</h3>
+            <p><strong>Objective:</strong> Find a file anywhere on the server with specific owner, group, and size properties.</p>
+            
+            <p>Follow the instructions on the <a href="https://overthewire.org/wargames/bandit/bandit7.html" target="_blank" rel="noopener noreferrer">bandit7 page</a>.</p>
+            <p>To search for a file, use <code>find /</code> with the following properties:</p>
+            <ul>
+              <li>File type: <code>-type f</code></li>
+              <li>Owned by <code>bandit7</code>: <code>-user bandit7</code></li>
+              <li>Grouped by <code>bandit6</code>: <code>-group bandit6</code></li>
+              <li>Exactly 33 bytes: <code>-size 33c</code></li>
+              <li>Redirect errors to null: <code>2>/dev/null</code></li>
+            </ul>
+            <p>Run the following command:</p>
+            <pre><code>find / -type f -user bandit7 -group bandit6 -size 33c 2>/dev/null</code></pre>
+            <p>The file you're looking for is <code>/var/lib/dpkg/info/bandit7.password</code>.</p>
+            <p>Read it with:</p>
+            <pre><code>cat /var/lib/dpkg/info/bandit7.password</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: morbNTDkSW6jIlUc0ymOdMaLnOlFVAaj</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Use <code>find</code> with specific criteria to locate files, and redirect error messages to <code>/dev/null</code> to avoid cluttering the output.</p>
           </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Use <code>./</code> to reference files that start with a dash <code>-</code>, so commands interpret them as filenames, not options.</p>
-        </section>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 7</h3>
+            <p><strong>Objective:</strong> Find a specific word in a large text file.</p>
+            
+            <p>There's a file called <code>data.txt</code> that contains a lot of text.</p>
+            <p>According to the hint, the flag should be next to the millionth word.</p>
+            <p>To find it, use the following command:</p>
+            <pre><code>cat data.txt | grep millionth</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Use <code>grep</code> to search through large files for specific words or phrases, especially when you know a word's position in the text.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 8</h3>
+            <p><strong>Objective:</strong> Find the unique line in a file containing many duplicates.</p>
+            
+            <p>The hint tells us that <code>data.txt</code> contains duplicates, and the flag appears only once.</p>
+            <p>To find the unique line (the flag), use the following commands:</p>
+            <pre><code>sort data.txt | uniq -u</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 4CKMh1JI91bUIZZPXDqGanal4xvAg0JM</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Use <code>sort</code> followed by <code>uniq -u</code> to find unique lines in a file, especially when duplicates are present.</p>
+          </div>
 
-        <section class="level-solution">
-          <h2>Bandit5</h2>
-          <p>Use <code>ls inhere</code> to explore the directory.</p>
-          <p>There are multiple files to search through.</p>
-          <p>There is a hint on the  <a href="https://overthewire.org/wargames/bandit/bandit6.html" target="_blank">bandit6 page</a>.</p>
-          <p>Enter the directoy by using <code>cd inhere</code></p>
-          <p>Use <code>find</code> with the following properties: human-readable, 1033 bytes in size, and not executable:</p>
-          <p><code>find inhere -type f -size 1033c ! -executable</code></p>
-          <p>The result will be <code>inhere/maybehere07/.file2</code>.</p>
-          <p>Read the file with <code>cat inhere/maybehere07/.file2</code>.</p>
-          <div class="flag-container">
-            🚩 <code>HWasnPhtq9AVKe0dmk45nxy20cvUa6EG</code>
+          <div class="level-solution">
+            <h3>Bandit Level 9</h3>
+            <p><strong>Objective:</strong> Find human-readable strings in a binary file that are preceded by equals signs.</p>
+            
+            <p>You need to find human-readable strings in the file that are preceded by several <code>=</code> characters.</p>
+            <p>Use the command:</p>
+            <pre><code>strings data.txt | grep ===</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: FGUW5ilLVJrxX9kMYMmlN4MgbpfMiqey</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p><code>strings</code> extracts readable text from binary files, and <code>grep</code> can be used to filter specific patterns like <code>===</code>.</p>
           </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Use <code>find</code> with specific file search criteria like size and executable status to narrow down results efficiently.</p>
-        </section>
-
-        <section class="level-solution">
-          <h2>Bandit6</h2>
-          <p>Follow the instructions on the <a href="https://overthewire.org/wargames/bandit/bandit7.html" target="_blank">bandit7 page</a>.</p>
-          <p>To search for a file, use <code>find /</code> with the following properties:</p>
-          <ul>
-            <li>File type: <code>-type f</code></li>
-            <li>Owned by <code>bandit7</code>: <code>-user bandit7</code></li>
-            <li>Grouped by <code>bandit6</code>: <code>-group bandit6</code></li>
-            <li>Exactly 33 bytes: <code>-size 33c</code></li>
-            <li>Redirect errors to null: <code>2>/dev/null</code></li>
-          </ul>
-          <p>Run the following command:</p>
-          <p><code>find / -type f -user bandit7 -group bandit6 -size 33c 2>/dev/null</code></p>
-          <p>The file you’re looking for is <code>/var/lib/dpkg/info/bandit7.password</code>.</p>
-          <p>Read it with <code>cat /var/lib/dpkg/info/bandit7.password</code>.</p>
-          <div class="flag-container">
-            🚩 <code>morbNTDkSW6jIlUc0ymOdMaLnOlFVAaj</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Use <code>find</code> with specific criteria to locate files, and redirect error messages to <code>/dev/null</code> to avoid cluttering the output.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit7</h2>
-          <p>There’s a file called <code>data.txt</code> that contains a lot of text.</p>
-          <p>According to the hint, the flag should be next to the millionth word.</p>
-          <p>To find it, use the following command:</p>
-          <p><code>cat data.txt | grep millionth</code></p>
-          <div class="flag-container">
-            🚩 <code>dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Use <code>grep</code> to search through large files for specific words or phrases, especially when you know a word's position in the text.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit8</h2>
-          <p>The hint tells us that <code>data.txt</code> contains duplicates, and the flag appears only once.</p>
-          <p>To find the unique line (the flag), use the following commands:</p>
-          <p><code>sort data.txt | uniq -u</code></p>
-          <div class="flag-container">
-            🚩 <code>4CKMh1JI91bUIZZPXDqGanal4xvAg0JM</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Use <code>sort</code> followed by <code>uniq -u</code> to find unique lines in a file, especially when duplicates are present.</p>
-        </section>
-
-        <section class="level-solution">
-          <h2>Bandit9</h2>
-          <p>You need to find human-readable strings in the file that are preceded by several <code>=</code> characters.</p>
-          <p>Use the command: <code>strings data.txt | grep ===</code></p>
-          <div class="flag-container">
-            🚩 <code>FGUW5ilLVJrxX9kMYMmlN4MgbpfMiqey</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p><code>strings</code> extracts readable text from binary files, and <code>grep</code> can be used to filter specific patterns like <code>===</code>.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit10</h2>
-          <p>The content of the file is base64 encoded.</p>
-          <p>Use the <code>base64</code> command with the <code>-d</code> flag to decode it.</p>
-          <p>Command: <code>base64 -d data.txt</code></p>
-          <div class="flag-container">
-            🚩 <code>dtR173fZKb0RRsDFSGsg2RWnpNVj3qRr</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p><code>base64 -d</code> decodes base64 encoded data and can be used to reveal hidden text in files.</p>
-        </section>
-
-        <section class="level-solution">
-          <h2>Bandit11</h2>
-          <p>The text file contains a ROT13 encoded message.</p>
-          <p>View the content with: <code>cat data.txt</code></p>
-          <p>Decode it using: <code>cat data.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'</code></p>
-          <div class="flag-container">
-            🚩 <code>7x16WNeHIi5YkIhWsfFIqoognUTyj9Q4</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p><code>tr 'A-Za-z' 'N-ZA-Mn-za-m'</code> performs a ROT13 transformation on the input text by rotating each alphabet character by 13 positions.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit12</h2>
-          <p>The file is a hexdump of a file that’s been compressed multiple times.</p>
-          <p>Create a temp directory and copy the file: <code>cp ../../home/bandit12/data.txt .</code></p>
-          <p>Convert the hex dump back to binary: <code>xxd -r data.txt > data.bin</code></p>
-          <p>Use <code>file</code> to determine compression type, then decompress accordingly:</p>
-          <ul>
-            <li><code>mv data.bin data.gz</code>, <code>gunzip data.gz</code></li>
-            <li><code>bunzip2</code>, <code>tar -xf</code>, rename and repeat depending on file type</li>
-          </ul>
-          <p>Eventually, view the content: <code>cat data8</code></p>
-          <div class="flag-container">
-            🚩 <code>FO5dwFsc0cbaIiH0h8J2eUks2vdTDwAn</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>How to handle multiple levels of file compression and transform a hex dump back into a usable binary file using <code>xxd -r</code>.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit13</h2>
-          <p>You are given a private SSH key and need to login to the next level user.</p>
-          <p>Use the SSH key to log in: <code>ssh -i sshkey.private bandit14@localhost -p 2220</code></p>
-          <p>Once logged in, read the password file: <code>cat /etc/bandit_pass/bandit14</code></p>
-          <div class="flag-container">
-            🚩 <code>MU4VWeTyJk8ROof1qqmcBPaLh7lDCPvS</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>How to use an SSH private key for authentication with the <code>-i</code> flag and access restricted files from another user.</p>
-        </section>    
-        
-        <section class="level-solution">
-          <h2>Bandit14</h2>
-          <p>Use netcat to connect to port 30000 and provide the password from Bandit13.</p>
-          <p>Command: <code>nc localhost 30000</code></p>
-          <div class="flag-container">
-            🚩 <code>8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>How to use <code>nc</code> (netcat) to connect to a TCP port and interact with a remote service.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit15</h2>
-          <p>Connect to an SSL-enabled port using OpenSSL and input the Bandit14 password.</p>
-          <p>Command: <code>openssl s_client -connect localhost:30001</code></p>
-          <div class="flag-container">
-            🚩 <code>kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>How to use <code>openssl s_client</code> to establish an SSL connection and send input.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit16</h2>
-          <p>Scan for open ports between 31000 and 32000 using <code>nmap</code>.</p>
-          <p>Command: <code>nmap -p31000-32000 localhost</code></p>
-          <p>Try the open ports with <code>openssl s_client -quiet -connect localhost:[port]</code></p>
-          <p>Port 31790 is the correct one.</p>
-          <p>Enter the Bandit15 flag to receive an SSH private key.</p>
-          <p>Save the key to a file and secure it with: <code>chmod 600 keys.private</code></p>
-          <p>Use the key to log in: <code>ssh -i keys.private bandit17@bandit.labs.overthewire.org -p 2220</code></p>
-          <div class="flag-container">
-            🚩 <code>EReVavePLFHtFlFsjn3hyzMlvSuSAcRD</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>How to scan for open ports, establish a secure connection, and use SSH keys for login.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit17</h2>
-          <p>Compare two password files to find the difference.</p>
-          <p>Command: <code>diff password.new password.old</code></p>
-          <div class="flag-container">
-            🚩 <code>x2gLTTjFwMOhQ8oWNbMN362QKxfRqGlO</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>The <code>diff</code> command can be used to find differences between two files, which is useful for identifying modified content.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit18</h2>
-          <p>The login script immediately logs you out, so pipe the command to print the README before getting kicked.</p>
-          <p>Command: <code>ssh bandit.labs.overthewire.org -p 2220 -l bandit18 cat readme</code></p>
-          <div class="flag-container">
-            🚩 <code>cGWpMaKXVwDUNgPAVJbWYuGHVn9zl3j8</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>How to use SSH with a command to bypass forced logout scripts.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit19</h2>
-          <p>Use a special binary that runs as bandit20 to read the password file.</p>
-          <p>Command: <code>./bandit20-do cat /../../etc/bandit_pass/bandit20</code></p>
-          <div class="flag-container">
-            🚩 <code>0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>How to use setuid binaries to execute commands as another user.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit20</h2>
-          <p>Run a TCP server with a specific response that matches the expected password input for the <code>suconnect</code> binary.</p>
-          <p>Start the listener: <code>echo '0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO' | nc -l -p [your port]</code></p>
-          <p>Then execute: <code>./suconnect [port]</code></p>
-          <div class="flag-container">
-            🚩 <code>EeoULMCra2q0dSkYj561DX7s1CpBuOBt</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>How to create a TCP server using <code>nc</code> and provide dynamic input to a binary expecting network interaction.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit21</h2>
-          <p>Investigate cron jobs to find a script that copies a password to a known location.</p>
-          <p>Check: <code>cat /usr/bin/cronjob_bandit22.sh</code></p>
-          <p>Then: <code>cat /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv</code></p>
-          <div class="flag-container">
-            🚩 <code>tRae0UfB9v0UzbCdn9cY0gQnds9GF58Q</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Cron jobs can be used to gain access to otherwise restricted files when scripts copy data to world-readable locations.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit22</h2>
-          <p>Another cron job but this one creates a hash based on the current username and copies that user's password to <code>/tmp</code>.</p>
-          <p>Generate the hash: <code>echo 'I am user bandit23' | md5sum | cut -d ' ' -f 1</code></p>
-          <p>Then: <code>cat /tmp/[hash]</code></p>
-          <div class="flag-container">
-            🚩 <code>0Zf11ioIjMVN551jX3CmStKLYqjk54Ga</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>How to reverse-engineer cron scripts that create unique filenames dynamically using hashed usernames.</p>
         </section>
 
-        <section class="level-solution">
-          <h2>Bandit23</h2>
-          <p>To begin, write a script that will be activated every minute by a cron job.</p>
-          <p>Start by creating a space within <code>/tmp</code> holding the correct permissions for your text file to save. You can use the following commands:</p>
-          <code>mkdir -p /print</code>
-        <code>chmod 777 /tmp/print</code></pre>
-          <p>Next, create a script in <code>/var/spool/bandit24/foo/</code> with the following contents:</p>
-          <pre><code>#!/bin/bash
-        echo "hi" > /tmp/print/hi.txt</code></pre>
-          <p>Make the script executable:</p>
-          <code>chmod +x /var/spool/bandit24/foo/bandito.sh</code>
-          <p>Then run the script:</p>
-          <code>cat /tmp/print/hi.txt</code>
-          <p>Now, to copy the Bandit24 flag, modify the script to the following:</p>
-          <pre><code>#!/bin/bash
-        cat /etc/bandit_pass/bandit24 > /tmp/print/flag.txt</code></pre>
-          <div class="flag-container">
-            🚩 <code>gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8</code>
+        <section id="level-10-19">
+          <h2>Levels 10-19: Encoding & Network</h2>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 10</h3>
+            <p><strong>Objective:</strong> Decode base64 encoded data.</p>
+            
+            <p>The content of the file is base64 encoded.</p>
+            <p>Use the <code>base64</code> command with the <code>-d</code> flag to decode it.</p>
+            <pre><code>base64 -d data.txt</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: dtR173fZKb0RRsDFSGsg2RWnpNVj3qRr</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p><code>base64 -d</code> decodes base64 encoded data and can be used to reveal hidden text in files.</p>
           </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>By using a cron job, you can automate tasks such as copying files at regular intervals. This is a common method to periodically run scripts in Unix-like systems.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit24</h2>
-          <p>This level requires brute-forcing a PIN code to gain access to the Bandit25 flag.</p>
-          <pre><code>#!/bin/bash
-        
-        flag="gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8"
-        host="localhost"
-        port="30002"
-        
-        for pincode in {0000..9999}
-        do
-            echo "$flag $pincode"
-        done | nc $host $port</code></pre>
-          <div class="flag-container">
-            🚩 <code>iCi86ttT4KSNe1armKiwbQNmB3YJP3q4</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>When brute-forcing over a network connection, it's more efficient to maintain a single connection and pipe data into it, rather than reconnecting each time.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit25</h2>
-          <p>This level required logging in as <code>bandit26</code> from <code>bandit25</code> using an SSH key.</p>
-          <p>First, list the files and find the private key:</p>
-          <p><code>ls</code></p>
-          <p>Use the key to SSH into the next level:</p>
-          <p><code>ssh -i bandit26.sshkey bandit26@localhost -p 2220</code></p>
-          <p>Connection immediately closes after showing an ASCII logo. Upon inspection, the shell for <code>bandit26</code> is not <code>/bin/bash</code>:</p>
-          <p><code>cat /etc/passwd</code></p>
-          <p>Find the shell points to a script: <code>/usr/bin/showtext</code></p>
-          <pre><code>#!/bin/sh
-        export TERM=linux
-        exec more ~/text.txt
-        exit 0</code></pre>
-          <p>The script launches <code>more</code>, which can be exploited if the terminal window is small enough to trigger the <code>--More--</code> prompt.</p>
-          <p>At the <code>--More--</code> prompt:</p>
-          <ul>
-            <li>Press <code>v</code> to open <code>vi</code></li>
-            <li>Then enter <code>:set shell=/bin/bash</code></li>
-            <li>And then run <code>:shell</code></li>
-          </ul>
-          <p>This drops you into a real shell where you can read the password:</p>
-          <p><code>cat /etc/bandit_pass/bandit26</code></p>
-          <div class="flag-container">
-            🚩 <code>s0773xxkk0MXfdqOfPRVr9L3jJBUOgCZ</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Even restricted environments using limited shells (like <code>more</code>) can be exploited if interactive tools (like <code>vi</code>) are accessible. Small terminal tricks can lead to big escapes.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit26</h2>
-          <p>This level continues from Bandit25. After logging in, list the files:</p>
-          <p><code>ls</code></p>
-          <p>You'll see a file named <code>bandit27-do</code>. Running it shows:</p>
-          <pre><code>Run a command as another user.
-        Example: ./bandit27-do id</code></pre>
-          <p>Use it to run the following command:</p>
-          <p><code>./bandit27-do cat /etc/bandit_pass/bandit27</code></p>
-          <div class="flag-container">
-            🚩 <code>upsNCc7vzaRDx6oZC6GiR6ERwe1MowGB</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Binary wrappers like <code>bandit27-do</code> can be used to execute commands as another user—great for privilege escalation.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit27</h2>
-          <p>This level involves cloning a Git repo over SSH.</p>
-          <p>Navigate to a writable directory first:</p>
-          <ul>
-            <li><code>cd /tmp</code></li>
-            <li><code>mkdir gc</code></li>
-            <li><code>cd gc</code></li>
-          </ul>
-          <p>Clone the Git repository using the appropriate SSH command:</p>
-          <p><code>git clone ssh://bandit27-git@localhost:2220/home/bandit27-git/repo</code></p>
-          <p>Then navigate into the cloned repository:</p>
-          <p><code>cd repo</code></p>
-          <p>Read the <code>README</code> file:</p>
-          <p><code>cat README</code></p>
-          <div class="flag-container">
-            🚩 <code>Yz9IpL0sBcCeuG7m9uQFt8ZNpS4HZRcN</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>You can use custom SSH commands with <code>git clone</code> to access restricted Git repos even when ports or auth methods are unusual.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit28</h2>
-          <p>Clone the repository using SSH:</p>
-          <p><code>git clone ssh://bandit28-git@localhost:2220/home/bandit28-git/repo</code></p>
-          <p>Navigate to the repo and view the file:</p>
-          <p><code>cd repo</code></p>
-          <p><code>cat README.md5sum</code></p>
-          <p>The file lists credentials and hints at a prior commit leak.</p>
-          <p>Check the commit history:</p>
-          <p><code>git log</code></p>
-          <p>Find and inspect the commit with the message "fix info leak":</p>
-          <p><code>git show 674690a00a0056ab96048f7317b9ec20c057c06b</code></p>
-          <div class="flag-container">
-            🚩 <code>4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Commit history can contain sensitive info even after being "fixed"—always check old commits in CTFs and real audits.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit29</h2>
-          <p>Clone the repository:</p>
-          <p><code>git clone ssh://bandit29-git@localhost:2220/home/bandit29-git/repo</code></p>
-          <p>List remote branches:</p>
-          <p><code>git branch -r</code></p>
-          <p>Switch to the <code>dev</code> branch:</p>
-          <p><code>git checkout dev</code></p>
-          <div class="flag-container">
-            🚩 <code>qp30ex3VLz5MDG1n91YowTv4Q8l7CDZL</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>CTF flags might be hidden in alternate Git branches—don’t forget to check all of them, especially non-master ones.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit30</h2>
-          <p>Clone the repository:</p>
-          <p><code>git clone ssh://bandit30-git@localhost:2220/home/bandit30-git/repo</code></p>
-          <p>README.md contains a friendly message, but no flag.</p>
-          <p>Try exploring other Git features. This time, try tags:</p>
-          <p><code>git tag</code></p>
-          <p>A tag named <code>secret</code> appears. Show its contents:</p>
-          <p><code>git show secret</code></p>
-          <div class="flag-container">
-            🚩 <code>fb5S2xb7bRyFmAvQYQGEqsbhVyJqhnDy</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Besides commits and branches, Git tags can also store hidden data or flags—great spot for secrets.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit31</h2>
-          <p>Clone the Git repository:</p>
-          <p><code>git clone ssh://bandit31-git@localhost:2220/home/bandit31-git/repo</code></p>
-          <p>Create a file with the required message:</p>
-          <p><code>echo 'May I come in?' > key.txt</code></p>
-          <p>Add the file forcibly (some files might be ignored by .gitignore):</p>
-          <p><code>git add -f key.txt</code></p>
-          <p>Commit and push:</p>
-          <p><code>git commit -m "keys"</code></p>
-          <p><code>git push</code></p>
-          <div class="flag-container">
-            🚩 <code>3O9RfhqyAlVBEZpVb6LYStshZoqoSx5K</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>Sometimes the solution is as simple as creating a file with the correct content and pushing it—knowing how to bypass .gitignore helps too.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit32</h2>
-          <p>This level restricts the use of many standard shell commands. Direct commands like <code>ls</code> or <code>cat</code> fail.</p>
-          <p>After several failed attempts (like using <code>\ls</code> or <code>bash -c</code>), the working solution is:</p>
-          <p><code>$0</code></p>
-          <p>This runs the script again in a cleaner shell environment. Once inside, simply run:</p>
-          <p><code>cat /etc/bandit_pass/bandit33</code></p>
-          <div class="flag-container">
-            🚩 <code>tQdtbs5D5i2vJwkO8mEyYEyTL8izoeJ0</code>
-          </div>
-        
-          <p>🤔 What did I learn:</p>
-          <p>When standard commands are blocked, re-triggering the shell script with <code>$0</code> can reset the environment and bypass constraints.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>Bandit32 - Coming soon</h2>
-          <p>Hungry for more? Check out <a href="/writeups/leviathan.html">Leviathan</a>.</p>
-        </section>
-        
 
+          <div class="level-solution">
+            <h3>Bandit Level 11</h3>
+            <p><strong>Objective:</strong> Decode ROT13 encoded text.</p>
+            
+            <p>The text file contains a ROT13 encoded message.</p>
+            <p>View the content with: <code>cat data.txt</code></p>
+            <p>Decode it using:</p>
+            <pre><code>cat data.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 7x16WNeHIi5YkIhWsfFIqoognUTyj9Q4</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p><code>tr 'A-Za-z' 'N-ZA-Mn-za-m'</code> performs a ROT13 transformation on the input text by rotating each alphabet character by 13 positions.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 12</h3>
+            <p><strong>Objective:</strong> Handle multiple levels of file compression from a hexdump.</p>
+            
+            <p>The file is a hexdump of a file that's been compressed multiple times.</p>
+            <p>Create a temp directory and copy the file:</p>
+            <pre><code>cp ../../home/bandit12/data.txt .</code></pre>
+            <p>Convert the hex dump back to binary:</p>
+            <pre><code>xxd -r data.txt > data.bin</code></pre>
+            <p>Use <code>file</code> to determine compression type, then decompress accordingly:</p>
+            <ul>
+              <li><code>mv data.bin data.gz</code>, <code>gunzip data.gz</code></li>
+              <li><code>bunzip2</code>, <code>tar -xf</code>, rename and repeat depending on file type</li>
+            </ul>
+            <p>Eventually, view the content: <code>cat data8</code></p>
+            
+            <div class="flag-container">
+              <strong>🚩: FO5dwFsc0cbaIiH0h8J2eUks2vdTDwAn</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>How to handle multiple levels of file compression and transform a hex dump back into a usable binary file using <code>xxd -r</code>.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 13</h3>
+            <p><strong>Objective:</strong> Use an SSH private key for authentication.</p>
+            
+            <p>You are given a private SSH key and need to login to the next level user.</p>
+            <p>Use the SSH key to log in:</p>
+            <pre><code>ssh -i sshkey.private bandit14@localhost -p 2220</code></pre>
+            <p>Once logged in, read the password file:</p>
+            <pre><code>cat /etc/bandit_pass/bandit14</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: MU4VWeTyJk8ROof1qqmcBPaLh7lDCPvS</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>How to use an SSH private key for authentication with the <code>-i</code> flag and access restricted files from another user.</p>
+          </div>    
+          
+          <div class="level-solution">
+            <h3>Bandit Level 14</h3>
+            <p><strong>Objective:</strong> Connect to a service using netcat.</p>
+            
+            <p>Use netcat to connect to port 30000 and provide the password from Bandit13.</p>
+            <pre><code>nc localhost 30000</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>How to use <code>nc</code> (netcat) to connect to a TCP port and interact with a remote service.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 15</h3>
+            <p><strong>Objective:</strong> Connect to an SSL-enabled service.</p>
+            
+            <p>Connect to an SSL-enabled port using OpenSSL and input the Bandit14 password.</p>
+            <pre><code>openssl s_client -connect localhost:30001</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>How to use <code>openssl s_client</code> to establish an SSL connection and send input.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 16</h3>
+            <p><strong>Objective:</strong> Port scan and identify the correct SSL service.</p>
+            
+            <p>Scan for open ports between 31000 and 32000 using <code>nmap</code>.</p>
+            <pre><code>nmap -p31000-32000 localhost</code></pre>
+            <p>Try the open ports with <code>openssl s_client -quiet -connect localhost:[port]</code></p>
+            <p>Port 31790 is the correct one.</p>
+            <p>Enter the Bandit15 flag to receive an SSH private key.</p>
+            <p>Save the key to a file and secure it with:</p>
+            <pre><code>chmod 600 keys.private</code></pre>
+            <p>Use the key to log in:</p>
+            <pre><code>ssh -i keys.private bandit17@bandit.labs.overthewire.org -p 2220</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: EReVavePLFHtFlFsjn3hyzMlvSuSAcRD</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>How to scan for open ports, establish a secure connection, and use SSH keys for login.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 17</h3>
+            <p><strong>Objective:</strong> Compare two files to find differences.</p>
+            
+            <p>Compare two password files to find the difference.</p>
+            <pre><code>diff password.new password.old</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: x2gLTTjFwMOhQ8oWNbMN362QKxfRqGlO</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>The <code>diff</code> command can be used to find differences between two files, which is useful for identifying modified content.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 18</h3>
+            <p><strong>Objective:</strong> Bypass a logout script by executing commands via SSH.</p>
+            
+            <p>The login script immediately logs you out, so pipe the command to print the README before getting kicked.</p>
+            <pre><code>ssh bandit.labs.overthewire.org -p 2220 -l bandit18 cat readme</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: cGWpMaKXVwDUNgPAVJbWYuGHVn9zl3j8</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>How to use SSH with a command to bypass forced logout scripts.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 19</h3>
+            <p><strong>Objective:</strong> Use a setuid binary to read files as another user.</p>
+            
+            <p>Use a special binary that runs as bandit20 to read the password file.</p>
+            <pre><code>./bandit20-do cat /../../etc/bandit_pass/bandit20</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>How to use setuid binaries to execute commands as another user.</p>
+          </div>
+        </section>
+
+        <section id="level-20-29">
+          <h2>Levels 20-29: Advanced Techniques</h2>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 20</h3>
+            <p><strong>Objective:</strong> Create a network service and interact with a binary that connects to it.</p>
+            
+            <p>Run a TCP server with a specific response that matches the expected password input for the <code>suconnect</code> binary.</p>
+            <p>Start the listener:</p>
+            <pre><code>echo '0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO' | nc -l -p [your port]</code></pre>
+            <p>Then execute:</p>
+            <pre><code>./suconnect [port]</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: EeoULMCra2q0dSkYj561DX7s1CpBuOBt</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>How to create a TCP server using <code>nc</code> and provide dynamic input to a binary expecting network interaction.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 21</h3>
+            <p><strong>Objective:</strong> Analyze cron jobs to find password files.</p>
+            
+            <p>Investigate cron jobs to find a script that copies a password to a known location.</p>
+            <p>Check:</p>
+            <pre><code>cat /usr/bin/cronjob_bandit22.sh</code></pre>
+            <p>Then:</p>
+            <pre><code>cat /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: tRae0UfB9v0UzbCdn9cY0gQnds9GF58Q</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Cron jobs can be used to gain access to otherwise restricted files when scripts copy data to world-readable locations.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 22</h3>
+            <p><strong>Objective:</strong> Reverse engineer a cron script that creates dynamic filenames.</p>
+            
+            <p>Another cron job but this one creates a hash based on the current username and copies that user's password to <code>/tmp</code>.</p>
+            <p>Generate the hash:</p>
+            <pre><code>echo 'I am user bandit23' | md5sum | cut -d ' ' -f 1</code></pre>
+            <p>Then:</p>
+            <pre><code>cat /tmp/[hash]</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 0Zf11ioIjMVN551jX3CmStKLYqjk54Ga</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>How to reverse-engineer cron scripts that create unique filenames dynamically using hashed usernames.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Bandit Level 23</h3>
+            <p><strong>Objective:</strong> Create a script that will be executed by a cron job.</p>
+            
+            <p>To begin, write a script that will be activated every minute by a cron job.</p>
+            <p>Start by creating a space within <code>/tmp</code> holding the correct permissions for your text file to save. You can use the following commands:</p>
+            <pre><code>mkdir -p /tmp/print
+chmod 777 /tmp/print</code></pre>
+            <p>Next, create a script in <code>/var/spool/bandit24/foo/</code> with the following contents:</p>
+            <pre><code>#!/bin/bash
+echo "hi" > /tmp/print/hi.txt</code></pre>
+            <p>Make the script executable:</p>
+            <pre><code>chmod +x /var/spool/bandit24/foo/bandito.sh</code></pre>
+            <p>Then run the script:</p>
+            <pre><code>cat /tmp/print/hi.txt</code></pre>
+            <p>Now, to copy the Bandit24 flag, modify the script to the following:</p>
+            <pre><code>#!/bin/bash
+cat /etc/bandit_pass/bandit24 > /tmp/print/flag.txt</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>By using a cron job, you can automate tasks such as copying files at regular intervals. This is a common method to periodically run scripts in Unix-like systems.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 24</h3>
+            <p><strong>Objective:</strong> Brute force a PIN code over a network connection.</p>
+            
+            <p>This level requires brute-forcing a PIN code to gain access to the Bandit25 flag.</p>
+            <pre><code>#!/bin/bash
+
+flag="gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8"
+host="localhost"
+port="30002"
+
+for pincode in {0000..9999}
+do
+    echo "$flag $pincode"
+done | nc $host $port</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: iCi86ttT4KSNe1armKiwbQNmB3YJP3q4</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>When brute-forcing over a network connection, it's more efficient to maintain a single connection and pipe data into it, rather than reconnecting each time.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 25</h3>
+            <p><strong>Objective:</strong> Exploit the 'more' command in a restricted shell environment.</p>
+            
+            <p>This level required logging in as <code>bandit26</code> from <code>bandit25</code> using an SSH key.</p>
+            <p>First, list the files and find the private key:</p>
+            <pre><code>ls</code></pre>
+            <p>Use the key to SSH into the next level:</p>
+            <pre><code>ssh -i bandit26.sshkey bandit26@localhost -p 2220</code></pre>
+            <p>Connection immediately closes after showing an ASCII logo. Upon inspection, the shell for <code>bandit26</code> is not <code>/bin/bash</code>:</p>
+            <pre><code>cat /etc/passwd</code></pre>
+            <p>Find the shell points to a script: <code>/usr/bin/showtext</code></p>
+            <pre><code>#!/bin/sh
+export TERM=linux
+exec more ~/text.txt
+exit 0</code></pre>
+            <p>The script launches <code>more</code>, which can be exploited if the terminal window is small enough to trigger the <code>--More--</code> prompt.</p>
+            <p>At the <code>--More--</code> prompt:</p>
+            <ul>
+              <li>Press <code>v</code> to open <code>vi</code></li>
+              <li>Then enter <code>:set shell=/bin/bash</code></li>
+              <li>And then run <code>:shell</code></li>
+            </ul>
+            <p>This drops you into a real shell where you can read the password:</p>
+            <pre><code>cat /etc/bandit_pass/bandit26</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: s0773xxkk0MXfdqOfPRVr9L3jJBUOgCZ</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Even restricted environments using limited shells (like <code>more</code>) can be exploited if interactive tools (like <code>vi</code>) are accessible. Small terminal tricks can lead to big escapes.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 26</h3>
+            <p><strong>Objective:</strong> Use a setuid wrapper to execute commands as another user.</p>
+            
+            <p>This level continues from Bandit25. After logging in, list the files:</p>
+            <pre><code>ls</code></pre>
+            <p>You'll see a file named <code>bandit27-do</code>. Running it shows:</p>
+            <pre><code>Run a command as another user.
+Example: ./bandit27-do id</code></pre>
+            <p>Use it to run the following command:</p>
+            <pre><code>./bandit27-do cat /etc/bandit_pass/bandit27</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: upsNCc7vzaRDx6oZC6GiR6ERwe1MowGB</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Binary wrappers like <code>bandit27-do</code> can be used to execute commands as another user—great for privilege escalation.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 27</h3>
+            <p><strong>Objective:</strong> Clone a Git repository over SSH.</p>
+            
+            <p>This level involves cloning a Git repo over SSH.</p>
+            <p>Navigate to a writable directory first:</p>
+            <pre><code>cd /tmp
+mkdir gc
+cd gc</code></pre>
+            <p>Clone the Git repository using the appropriate SSH command:</p>
+            <pre><code>git clone ssh://bandit27-git@localhost:2220/home/bandit27-git/repo</code></pre>
+            <p>Then navigate into the cloned repository:</p>
+            <pre><code>cd repo</code></pre>
+            <p>Read the <code>README</code> file:</p>
+            <pre><code>cat README</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: Yz9IpL0sBcCeuG7m9uQFt8ZNpS4HZRcN</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>You can use custom SSH commands with <code>git clone</code> to access restricted Git repos even when ports or auth methods are unusual.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 28</h3>
+            <p><strong>Objective:</strong> Find sensitive information in Git commit history.</p>
+            
+            <p>Clone the repository using SSH:</p>
+            <pre><code>git clone ssh://bandit28-git@localhost:2220/home/bandit28-git/repo</code></pre>
+            <p>Navigate to the repo and view the file:</p>
+            <pre><code>cd repo
+cat README.md</code></pre>
+            <p>The file lists credentials and hints at a prior commit leak.</p>
+            <p>Check the commit history:</p>
+            <pre><code>git log</code></pre>
+            <p>Find and inspect the commit with the message "fix info leak":</p>
+            <pre><code>git show 674690a00a0056ab96048f7317b9ec20c057c06b</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Commit history can contain sensitive info even after being "fixed"—always check old commits in CTFs and real audits.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 29</h3>
+            <p><strong>Objective:</strong> Find information hidden in Git branches.</p>
+            
+            <p>Clone the repository:</p>
+            <pre><code>git clone ssh://bandit29-git@localhost:2220/home/bandit29-git/repo</code></pre>
+            <p>List remote branches:</p>
+            <pre><code>git branch -r</code></pre>
+            <p>Switch to the <code>dev</code> branch:</p>
+            <pre><code>git checkout dev</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: qp30ex3VLz5MDG1n91YowTv4Q8l7CDZL</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>CTF flags might be hidden in alternate Git branches—don't forget to check all of them, especially non-master ones.</p>
+          </div>
+        </section>
+
+        <section id="level-30-33">
+          <h2>Levels 30-33: Final Challenges</h2>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 30</h3>
+            <p><strong>Objective:</strong> Find information stored in Git tags.</p>
+            
+            <p>Clone the repository:</p>
+            <pre><code>git clone ssh://bandit30-git@localhost:2220/home/bandit30-git/repo</code></pre>
+            <p>README.md contains a friendly message, but no flag.</p>
+            <p>Try exploring other Git features. This time, try tags:</p>
+            <pre><code>git tag</code></pre>
+            <p>A tag named <code>secret</code> appears. Show its contents:</p>
+            <pre><code>git show secret</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: fb5S2xb7bRyFmAvQYQGEqsbhVyJqhnDy</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Besides commits and branches, Git tags can also store hidden data or flags—great spot for secrets.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 31</h3>
+            <p><strong>Objective:</strong> Push a file to a Git repository while bypassing .gitignore.</p>
+            
+            <p>Clone the Git repository:</p>
+            <pre><code>git clone ssh://bandit31-git@localhost:2220/home/bandit31-git/repo</code></pre>
+            <p>Create a file with the required message:</p>
+            <pre><code>echo 'May I come in?' > key.txt</code></pre>
+            <p>Add the file forcibly (some files might be ignored by .gitignore):</p>
+            <pre><code>git add -f key.txt</code></pre>
+            <p>Commit and push:</p>
+            <pre><code>git commit -m "keys"
+git push</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: 3O9RfhqyAlVBEZpVb6LYStshZoqoSx5K</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Sometimes the solution is as simple as creating a file with the correct content and pushing it—knowing how to bypass .gitignore helps too.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 32</h3>
+            <p><strong>Objective:</strong> Escape a restricted shell environment.</p>
+            
+            <p>This level restricts the use of many standard shell commands. Direct commands like <code>ls</code> or <code>cat</code> fail.</p>
+            <p>After several failed attempts (like using <code>\ls</code> or <code>bash -c</code>), the working solution is:</p>
+            <pre><code>$0</code></pre>
+            <p>This runs the script again in a cleaner shell environment. Once inside, simply run:</p>
+            <pre><code>cat /etc/bandit_pass/bandit33</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: tQdtbs5D5i2vJwkO8mEyYEyTL8izoeJ0</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>When standard commands are blocked, re-triggering the shell script with <code>$0</code> can reset the environment and bypass constraints.</p>
+          </div>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 33</h3>
+            <p><strong>Objective:</strong> Congratulations! You've completed the Bandit wargame.</p>
+            
+            <p>Hungry for more? Check out <a href="/writeups/leviathan.html">Leviathan</a> for your next challenge.</p>
+            
+            <p><strong>What's Next:</strong></p>
+            <p>Now that you've mastered the basics of Linux command line and security concepts, consider exploring:</p>
+            <ul>
+              <li>Other OverTheWire challenges like Leviathan, Krypton, or Natas</li>
+              <li>HackTheBox machines for real-world penetration testing scenarios</li>
+              <li>TryHackMe rooms for structured cybersecurity learning paths</li>
+            </ul>
+          </div>
+        </section>
       </article>
+      
     </main>
 
     <footer>
-      <p>Created by <a href="https://github.com/jvandenhurk" target="_blank">Justin Van Den Hurk</a> • Hosted on GitHub Pages</p>
-      <p><small>Last updated: April 2025</small></p>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: April 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
     </footer>
   </div>
-
-  <!-- Hide terminal icon on mobile -->
-  <style>
-    @media (max-width: 768px) {
-      .terminal-icon {
-        display: none;
-      }
-    }
-  </style>
 </body>
 </html>

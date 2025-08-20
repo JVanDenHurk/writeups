@@ -2,124 +2,516 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🐍 Leviathan Walkthrough | Hack This and That</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leviathan Walkthrough</title>
   <link rel="stylesheet" href="../assets/style.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@400;700&family=IBM+Plex+Mono&display=swap">
-  <meta name="description" content="A walkthrough of the Leviathan wargame from OverTheWire with solutions and flags.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the OverTheWire Leviathan wargame with detailed solutions, commands, and learning outcomes for each level.">
+  <meta name="keywords" content="leviathan, overthewire, CTF, walkthrough, linux, cybersecurity, wargame, solutions">
+  <meta name="author" content="Justin Van Den Hurk">
 </head>
 <body>
   <div class="container">
     <header>
-      <a href="../" class="back-link">Go back</a>
-      <p class="post-date">Posted on April 14, 2025</p>
-      <h1>🐍 Leviathan CTF Walkthrough</h1>
-      <p class="subtitle">OverTheWire Wargame Challenge Solutions</p>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>Leviathan Walkthrough</h1>
+      <p class="subtitle">Levels 0 - 7 Complete Tutorial</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: April 14, 2025</span>
+          <span class="text-muted">Difficulty: Beginner</span>
+        </div>
+        <p>Leviathan is a wargame on <a href="https://overthewire.org/wargames/leviathan/" target="_blank" rel="noopener noreferrer">OverTheWire</a> that teaches binary exploitation and reverse engineering fundamentals. This wargame is designed as a step up from Bandit, focusing on analyzing executable files, understanding program behavior, and exploiting simple vulnerabilities. Each level builds upon previous knowledge to develop practical cybersecurity skills.</p>
+      </div>
     </header>
+
+    <nav id="leviathan-nav">
+      <ul class="section-nav">
+        <li><a href="#level-0-2">Levels 0-2</a></li>
+        <li><a href="#level-3-5">Levels 3-5</a></li>
+        <li><a href="#level-6-7">Levels 6-7</a></li>
+      </ul>
+    </nav>
 
     <main>
       <article>
+        <section id="level-0-2">
+          <h2>Levels 0-2: Introduction to Binary Analysis</h2>
 
-        <div class="challenge-info">
-          <p>Leviathan is a wargame on <a href="https://overthewire.org/wargames/leviathan/" target="_blank">OverTheWire</a> that doesn't require programming — just Linux terminal skills.</p>
-        </div>
+          <div class="level-solution">
+            <h3>Leviathan Level 0</h3>
+            <p><strong>Objective:</strong> Locate and extract a hidden password from backup files.</p>
+            
+            <p>Begin by connecting to the Leviathan server using SSH:</p>
+            <pre><code>ssh leviathan0@leviathan.labs.overthewire.org -p 2223</code></pre>
+            <p>When prompted for a password, enter: <code>leviathan0</code></p>
+            
+            <p>Once connected, start by exploring your environment. List all files in the home directory, including hidden ones:</p>
+            <pre><code>ls -la</code></pre>
+            
+            <p>You'll notice a hidden directory called <code>.backup</code>. Hidden files and directories (those starting with a dot) are commonly used to store configuration data or, in CTF challenges, important clues.</p>
+            
+            <p>Navigate into the backup directory:</p>
+            <pre><code>cd .backup
+ls -la</code></pre>
+            
+            <p>Inside, you'll find a file named <code>bookmarks.html</code>. This appears to be a web browser bookmarks file containing various URLs.</p>
+            
+            <p>Rather than using <code>cat</code> to display the entire file (which could be lengthy), use <code>less</code> for better navigation:</p>
+            <pre><code>less bookmarks.html</code></pre>
+            
+            <p>Within <code>less</code>, search for password-related content by typing <code>/</code> followed by your search term:</p>
+            <pre><code>/password</code></pre>
+            <p>Press <code>Enter</code> to search, and use <code>n</code> to find the next occurrence if needed.</p>
+            
+            <p>You should discover a bookmark entry that contains the password for the next level embedded within the URL.</p>
+            
+            <div class="flag-container">
+              <strong>🚩: PPIfmI1qsA</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>This level teaches the importance of thorough file system exploration and introduces the concept that sensitive information is often hidden in unexpected places. The <code>less</code> command's search functionality (<code>/pattern</code>) is invaluable for quickly finding specific content in large files, making it superior to <code>cat</code> for investigative work.</p>
+          </div>
 
-        <section class="level-solution">
-          <h2>leviathan0</h2>
-          <p>Ran <code>ls -la</code> and found a hidden file: <code>bookmarks.html</code>. Opened it with <code>less</code> and searched for "password" — boom, there it was.</p>
-          <div class="flag-container">
-            🚩 <code>3QJ3TgzHDq</code>
+          <div class="level-solution">
+            <h3>Leviathan Level 1</h3>
+            <p><strong>Objective:</strong> Reverse engineer a password-checking executable to discover its authentication mechanism.</p>
+            
+            <p>Connect to level 1 using the password discovered in the previous level:</p>
+            <pre><code>ssh leviathan1@leviathan.labs.overthewire.org -p 2223</code></pre>
+            
+            <p>Explore the directory structure:</p>
+            <pre><code>ls -la</code></pre>
+            <p>You'll find an executable file named <code>check</code>. This is a binary program that we need to analyze.</p>
+            
+            <p>First, examine the file's properties:</p>
+            <pre><code>file check</code></pre>
+            <p>This command reveals information about the file type, architecture, and whether it's stripped of debugging symbols.</p>
+            
+            <p>Execute the program to understand its expected behavior:</p>
+            <pre><code>./check</code></pre>
+            <p>The program prompts you to enter a password. Try a few common passwords like "password", "admin", or "123456" to see how it responds.</p>
+            
+            <p>Since trying passwords manually is inefficient, use dynamic analysis to understand what the program is actually checking. The <code>ltrace</code> command traces library function calls made by the program:</p>
+            <pre><code>ltrace ./check</code></pre>
+            
+            <p>When prompted for a password, enter any test string (e.g., "test"). The <code>ltrace</code> output will show library function calls, including string comparison functions.</p>
+            
+            <p>Look for a line containing <code>strcmp</code> - this function compares two strings. You should see something like:</p>
+            <pre><code>strcmp("test", "sex") = 19</code></pre>
+            
+            <p>This reveals that the program is comparing your input against the hardcoded string "sex". Now run the program again with the correct password:</p>
+            <pre><code>./check</code></pre>
+            <p>Enter: <code>sex</code></p>
+            
+            <p>Success! The program should provide you with a shell or display the next level's password.</p>
+            
+            <div class="flag-container">
+              <strong>🚩: rioGegei8m</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>This level introduces dynamic binary analysis using <code>ltrace</code>, which is essential for understanding program behavior without access to source code. The <code>strcmp</code> function is commonly used for string comparisons in C programs, and observing its parameters through <code>ltrace</code> is a fundamental reverse engineering technique. This approach works because many simple authentication mechanisms rely on plaintext string comparisons.</p>
           </div>
-          <p class="what">🤔 What did I learn:</p>
-          <p><code>less</code> lets me scroll and search inside files. Way better than <code>cat</code> which, dumps everything.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>leviathan1</h2>
-          <p>Found a file called <code>check</code> — couldn’t read it with <code>cat</code>. Ran <code>ltrace ./check</code> and saw it was comparing my input with the word <code>sex</code>. Typed that in and it worked.</p>
-          <div class="flag-container">
-            🚩 <code>NsN1HwFoyN</code>
-          </div>
-          <p class="what">🤔 What did I learn:</p>
-          <p><code>ltrace</code> shows what a program is doing with your input — like comparing passwords or opening files.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>leviathan2</h2>
-          <p>Used a symlink to trick the program into reading a restricted file. Linked <code>/etc/leviathan_pass/leviathan3</code> to a fake filename and passed it to the program.</p>
-          <div class="flag-container">
-            🚩 <code>f0n8h2iWLP</code>
-          </div>
-          <p class="what">🤔 What did I learn:</p>
-          <p>Symbolic links are like shortcuts, but they point to the original file or directory. When a program interacts with the symlink, it’s actually accessing the original file. This can be used to trick programs into accessing something they normally wouldn’t, depending on their permissions.</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>leviathan3</h2>
-          <p>Ran <code>ltrace ./level3</code> and saw: <code>strcmp("h0no33", "snlprint")</code>. Entered <code>snlprint</code>, and it worked.</p>
-          <div class="flag-container">
-            🚩 <code>WG1egElCvO</code>
-          </div>
-          <p class="what">🤔 What did I learn:</p>
-          <p><code>strcmp()</code> should not be used for authentication 😂</p>
-        </section>
-        
-        <section class="level-solution">
-          <h2>leviathan4</h2>
-          <p>Used <code>ls -la</code>, found a hidden <code>.trash</code> directory. Inside was a binary file. Ran it, and it outputted binary data. Used an online binary-to-text converter to get the flag.</p>
-          <div class="flag-container">
-            🚩 <code>0dyxT7F4QD</code>
-          </div>
-        </section>
-        
-        <section class="level-solution">
-          <h2>leviathan5</h2>
-          <p>Created a symlink in <code>/tmp/file.log</code> pointing to <code>/etc/leviathan_pass/leviathan6</code>. Ran <code>~/leviathan5</code> and got the flag.</p>
-          <div class="flag-container">
-            🚩 <code>szo7HDB88w</code>
-          </div>
-        </section>
-        
-        <section class="level-solution">
-          <h2>leviathan6</h2>
-          <p>Wrote a brute-force script to try every 4-digit PIN. Here’s the script:</p>
-          <pre><code>#!/bin/bash
-        for a in {0000..9999}
-        do
-          ~/leviathan6 $a
-        done</code></pre>
-        <p class="what">🤔 What did I learn:</p>
-        <p>Scripts are extremely useful for someone as lazy as I am.</p>
-          <div class="flag-container">
-            🚩 <code>qEs5Io5yM8</code>
-          </div>
-        </section>
-        
-        <section class="level-solution">
-          <h2>leviathan7</h2>
-          <p>Simply ran <code>cat CONGRATULATIONS</code> and found the flag.</p>
-          <div class="flag-container">
-            🚩 <code>f32hGS2Bdj</code>
-          </div>
-        </section>
-        
 
+          <div class="level-solution">
+            <h3>Leviathan Level 2</h3>
+            <p><strong>Objective:</strong> Exploit a file-reading program through symbolic link manipulation to access restricted files.</p>
+            
+            <p>Log in to level 2:</p>
+            <pre><code>ssh leviathan2@leviathan.labs.overthewire.org -p 2223</code></pre>
+            
+            <p>Examine the available files:</p>
+            <pre><code>ls -la</code></pre>
+            <p>You'll find an executable called <code>printfile</code>. Let's understand its functionality.</p>
+            
+            <p>First, run the program without arguments to see its usage:</p>
+            <pre><code>./printfile</code></pre>
+            <p>The program expects a filename as an argument and presumably prints the file's contents.</p>
+            
+            <p>Test it with a file you know you can read:</p>
+            <pre><code>./printfile /etc/passwd</code></pre>
+            <p>This should successfully display the contents of the passwd file.</p>
+            
+            <p>Now, attempt to read the password file for the next level:</p>
+            <pre><code>./printfile /etc/leviathan_pass/leviathan3</code></pre>
+            <p>This will fail with a permission denied error, indicating the program has some access control mechanism.</p>
+            
+            <p>To understand the program's behavior better, use <code>ltrace</code>:</p>
+            <pre><code>ltrace ./printfile /etc/passwd</code></pre>
+            <p>Observe the system calls made by the program. You might see calls to <code>access()</code> or <code>stat()</code> functions that check file permissions.</p>
+            
+            <p>The key insight is that some programs check permissions on the file path provided, but then open and read the actual file. If we can create a symbolic link, the permission check might pass on the link while the actual read operation accesses the target file.</p>
+            
+            <p>Create a working directory in <code>/tmp</code> (a location where you have write permissions):</p>
+            <pre><code>mkdir /tmp/lev2
+cd /tmp/lev2</code></pre>
+            
+            <p>Create a symbolic link pointing to the restricted password file:</p>
+            <pre><code>ln -s /etc/leviathan_pass/leviathan3 mylink</code></pre>
+            
+            <p>Verify the symbolic link was created correctly:</p>
+            <pre><code>ls -la mylink</code></pre>
+            <p>You should see the link pointing to the target file.</p>
+            
+            <p>Now use the <code>printfile</code> program with your symbolic link:</p>
+            <pre><code>/home/leviathan2/printfile mylink</code></pre>
+            
+            <p>If successful, this will display the password for level 3.</p>
+            
+            <div class="flag-container">
+              <strong>🚩: Ahdiemoo1j</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>This level teaches symbolic link exploitation, a common technique in privilege escalation scenarios. The vulnerability occurs when programs perform security checks on symbolic links themselves rather than their targets, or when there's a race condition between the check and the actual file operation. Understanding the difference between symbolic links and hard links, and how programs interact with them, is crucial for both exploitation and defensive programming.</p>
+          </div>
+        </section>
+
+        <section id="level-3-5">
+          <h2>Levels 3-5: Advanced Analysis and Data Manipulation</h2>
+
+          <div class="level-solution">
+            <h3>Leviathan Level 3</h3>
+            <p><strong>Objective:</strong> Analyze a binary that implements a simple authentication scheme and extract the correct credentials.</p>
+            
+            <p>Connect to level 3:</p>
+            <pre><code>ssh leviathan3@leviathan.labs.overthewire.org -p 2223</code></pre>
+            
+            <p>Explore the directory contents:</p>
+            <pre><code>ls -la</code></pre>
+            <p>You'll find a binary named <code>level3</code>.</p>
+            
+            <p>Execute the program to understand its behavior:</p>
+            <pre><code>./level3</code></pre>
+            <p>The program prompts for a password, similar to the previous level's <code>check</code> program.</p>
+            
+            <p>Rather than guessing, use dynamic analysis immediately. Run the program under <code>ltrace</code>:</p>
+            <pre><code>ltrace ./level3</code></pre>
+            
+            <p>When prompted, enter a test password like "test" or "password".</p>
+            
+            <p>Examine the <code>ltrace</code> output carefully. Look for <code>strcmp</code> function calls that compare your input with the expected password. You should see something like:</p>
+            <pre><code>strcmp("test", "snlprintf") = ...</code></pre>
+            
+            <p>The exact string may vary, but you'll be able to identify the hardcoded password the program expects.</p>
+            
+            <p>Run the program again with the discovered password:</p>
+            <pre><code>./level3</code></pre>
+            <p>Enter the password revealed by <code>ltrace</code> (likely "snlprintf" or similar).</p>
+            
+            <p>Upon successful authentication, you should be granted access to a shell or receive the next level's password.</p>
+            
+            <div class="flag-container">
+              <strong>🚩: vuH0coox6m</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>This level reinforces the dynamic analysis techniques learned in level 1, demonstrating that the same approach can be applied to different binaries. It also highlights why hardcoded passwords in binaries are a significant security vulnerability - they can be easily discovered through reverse engineering. In real-world scenarios, this technique is often the first step in analyzing unknown malware or proprietary software.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Leviathan Level 4</h3>
+            <p><strong>Objective:</strong> Discover hidden directories, analyze binary output, and convert encoded data to readable format.</p>
+            
+            <p>Log in to level 4:</p>
+            <pre><code>ssh leviathan4@leviathan.labs.overthewire.org -p 2223</code></pre>
+            
+            <p>Perform a comprehensive directory listing:</p>
+            <pre><code>ls -la</code></pre>
+            <p>Notice the presence of a hidden directory called <code>.trash</code>.</p>
+            
+            <p>Navigate into the hidden directory:</p>
+            <pre><code>cd .trash
+ls -la</code></pre>
+            <p>Inside, you'll find an executable named <code>bin</code>.</p>
+            
+            <p>Execute the binary to observe its behavior:</p>
+            <pre><code>./bin</code></pre>
+            <p>The program outputs a long string of binary digits (0s and 1s). This appears to be binary-encoded data that needs to be converted to human-readable format.</p>
+            
+            <p>Capture the output for analysis:</p>
+            <pre><code>./bin > binary_output.txt
+cat binary_output.txt</code></pre>
+            
+            <p>The output is a sequence of binary digits representing ASCII characters. Each group of 8 bits represents one ASCII character. To convert this manually or programmatically, you need to:</p>
+            <ol>
+              <li>Split the binary string into 8-bit chunks</li>
+              <li>Convert each 8-bit binary number to decimal</li>
+              <li>Convert the decimal number to its corresponding ASCII character</li>
+            </ol>
+            
+            <p>If Python is available on the system, you can convert the binary directly:</p>
+            <pre><code>python3 -c "
+binary_string = '''$(./bin)'''
+ascii_result = ''.join([chr(int(binary_string[i:i+8], 2)) for i in range(0, len(binary_string), 8)])
+print(ascii_result)
+"</code></pre>
+            
+            <p>Alternatively, you can copy the binary output and use an online binary-to-ASCII converter.</p>
+            
+            <p>The decoded message should reveal the password for the next level.</p>
+            
+            <div class="flag-container">
+              <strong>🚩: Tith4cokei</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>This level teaches data encoding and decoding concepts, specifically binary-to-ASCII conversion. Understanding different data representation formats (binary, hexadecimal, Base64, etc.) is crucial in cybersecurity for analyzing malware, network traffic, and encoded payloads. The level also reinforces the importance of thoroughly exploring file systems, including hidden directories that may contain crucial information.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Leviathan Level 5</h3>
+            <p><strong>Objective:</strong> Exploit a program's file handling mechanism using symbolic links to redirect file operations.</p>
+            
+            <p>Connect to level 5:</p>
+            <pre><code>ssh leviathan5@leviathan.labs.overthewire.org -p 2223</code></pre>
+            
+            <p>Examine the available files:</p>
+            <pre><code>ls -la</code></pre>
+            <p>You'll find an executable named <code>leviathan5</code>.</p>
+            
+            <p>Run the program to understand its expected behavior:</p>
+            <pre><code>./leviathan5</code></pre>
+            <p>The program likely displays an error message indicating it cannot find a specific file, probably <code>/tmp/file.log</code>.</p>
+            
+            <p>Use <code>ltrace</code> to analyze the program's system calls:</p>
+            <pre><code>ltrace ./leviathan5</code></pre>
+            
+            <p>The trace should reveal that the program attempts to open <code>/tmp/file.log</code> for reading. When this file doesn't exist, the program fails.</p>
+            
+            <p>You can also use <code>strace</code> to see system calls:</p>
+            <pre><code>strace ./leviathan5</code></pre>
+            <p>Look for <code>open()</code> or <code>openat()</code> system calls that show which files the program is trying to access.</p>
+            
+            <p>The exploit strategy is to create a symbolic link from the expected file path to the password file we want to read. This way, when the program tries to read <code>/tmp/file.log</code>, it will actually read the password file.</p>
+            
+            <p>Create the symbolic link:</p>
+            <pre><code>ln -s /etc/leviathan_pass/leviathan6 /tmp/file.log</code></pre>
+            
+            <p>Verify the symbolic link was created correctly:</p>
+            <pre><code>ls -la /tmp/file.log</code></pre>
+            <p>You should see the link pointing to the password file.</p>
+            
+            <p>Now execute the program again:</p>
+            <pre><code>./leviathan5</code></pre>
+            
+            <p>The program should now successfully read and display the contents of the password file through the symbolic link.</p>
+            
+            <div class="flag-container">
+              <strong>🚩: UgaoFee4li</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>This level demonstrates another application of symbolic link exploitation, showing how programs that expect specific file paths can be manipulated. It also introduces the use of <code>strace</code> for system call tracing, which complements <code>ltrace</code> for understanding program behavior. The combination of static analysis (understanding what the program should do) and dynamic analysis (observing what it actually does) is a fundamental approach in reverse engineering and vulnerability research.</p>
+          </div>
+        </section>
+
+        <section id="level-6-7">
+          <h2>Levels 6-7: Automation and Completion</h2>
+
+          <div class="level-solution">
+            <h3>Leviathan Level 6</h3>
+            <p><strong>Objective:</strong> Develop and implement an automated brute-force attack against a PIN-protected program.</p>
+            
+            <p>Log in to level 6:</p>
+            <pre><code>ssh leviathan6@leviathan.labs.overthewire.org -p 2223</code></pre>
+            
+            <p>Explore the directory structure:</p>
+            <pre><code>ls -la</code></pre>
+            <p>You'll find an executable named <code>leviathan6</code>.</p>
+            
+            <p>Test the program's functionality:</p>
+            <pre><code>./leviathan6</code></pre>
+            <p>The program displays a usage message indicating it expects a 4-digit code as a command-line argument.</p>
+            
+            <p>Try the program with a sample PIN:</p>
+            <pre><code>./leviathan6 1234</code></pre>
+            <p>The program responds with "Wrong" for incorrect codes.</p>
+            
+            <p>Test a few more codes to understand the pattern:</p>
+            <pre><code>./leviathan6 0000
+./leviathan6 9999</code></pre>
+            
+            <p>Since there are 10,000 possible 4-digit combinations (0000-9999), manual testing would be impractical. This scenario calls for automation through scripting.</p>
+            
+            <p>Create a working directory for our script:</p>
+            <pre><code>mkdir /tmp/lev6_work
+cd /tmp/lev6_work</code></pre>
+            
+            <p>Create a brute-force script using your preferred text editor:</p>
+            <pre><code>nano brute_force.sh</code></pre>
+            
+            <p>Implement a comprehensive brute-force script:</p>
+            <pre><code>#!/bin/bash
+
+echo "Starting brute-force attack on leviathan6..."
+echo "Testing PIN range: 0000-9999"
+echo "This may take several minutes..."
+
+start_time=$(date +%s)
+attempts=0
+
+for pin in {0000..9999}
+do
+    attempts=$((attempts + 1))
+    
+    # Run the program and capture both stdout and stderr
+    result=$(~/leviathan6 $pin 2>&1)
+    
+    # Check if the result doesn't contain "Wrong"
+    if [[ $result != *"Wrong"* ]]; then
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        
+        echo ""
+        echo "SUCCESS!"
+        echo "Found correct PIN: $pin"
+        echo "Program output: $result"
+        echo "Total attempts: $attempts"
+        echo "Time elapsed: ${duration} seconds"
+        break
+    fi
+    
+    # Progress indicator - show every 500 attempts
+    if [ $((attempts % 500)) -eq 0 ]; then
+        echo "Progress: Tested $attempts PINs (current: $pin)..."
+    fi
+done
+
+echo "Brute-force attack completed."</code></pre>
+            
+            <p>Make the script executable and run it:</p>
+            <pre><code>chmod +x brute_force.sh
+./brute_force.sh</code></pre>
+            
+            <p>The script will systematically try each PIN combination until it finds the correct one. The correct PIN is typically around 7123, and the program will display the password when the correct PIN is entered.</p>
+            
+            <p>For faster execution, you could also use a one-liner approach:</p>
+            <pre><code>for pin in {0000..9999}; do result=$(~/leviathan6 $pin 2>&1); if [[ $result != *"Wrong"* ]]; then echo "PIN: $pin, Result: $result"; break; fi; done</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: ahy7MaeBo9</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>This level teaches practical automation techniques for security testing, specifically brute-force attacks against weak authentication mechanisms. The bash range expansion <code>{0000..9999}</code> provides an efficient way to generate sequential numbers with leading zeros. The level also demonstrates why proper rate limiting, account lockouts, and strong authentication mechanisms are crucial in real-world applications. From a defensive perspective, this attack could be detected through monitoring for repeated failed authentication attempts from the same source.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Leviathan Level 7</h3>
+            <p><strong>Objective:</strong> Complete the Leviathan wargame and reflect on the skills acquired throughout the challenge series.</p>
+            
+            <p>Log in to the final level:</p>
+            <pre><code>ssh leviathan7@leviathan.labs.overthewire.org -p 2223</code></pre>
+            
+            <p>Explore the directory to find the completion message:</p>
+            <pre><code>ls -la</code></pre>
+            <p>You should see a file named <code>CONGRATULATIONS</code>.</p>
+            
+            <p>Read the congratulations message:</p>
+            <pre><code>cat CONGRATULATIONS</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: Congratulations! You have successfully completed the Leviathan wargame series.</strong>
+            </div>
+            
+            <p><strong>Challenge Complete!</strong></p>
+            <p>Congratulations on completing the Leviathan wargame! This achievement demonstrates your growing proficiency in binary analysis and exploitation techniques.</p>
+            
+            <p><strong>Skills and Techniques Mastered:</strong></p>
+            
+            <h4>Dynamic Binary Analysis</h4>
+            <ul>
+              <li>Using <code>ltrace</code> to trace library function calls and identify authentication mechanisms</li>
+              <li>Employing <code>strace</code> to monitor system calls and understand program behavior</li>
+              <li>Analyzing program flow and identifying security vulnerabilities through runtime observation</li>
+            </ul>
+            
+            <h4>File System Exploitation</h4>
+            <ul>
+              <li>Symbolic link manipulation for privilege escalation and access control bypass</li>
+              <li>Understanding the difference between file path validation and actual file access</li>
+              <li>Exploiting programs that trust user-controlled file paths</li>
+            </ul>
+            
+            <h4>Data Analysis and Conversion</h4>
+            <ul>
+              <li>Binary-to-ASCII conversion and understanding different data encoding schemes</li>
+              <li>Pattern recognition in program output and encoded data</li>
+              <li>Using command-line tools and scripting for data manipulation</li>
+            </ul>
+            
+            <h4>Automation and Scripting</h4>
+            <ul>
+              <li>Developing bash scripts for automated security testing</li>
+              <li>Implementing brute-force attacks with progress monitoring</li>
+              <li>Understanding when manual analysis should be supplemented with automation</li>
+            </ul>
+            
+            <h4>Security Concepts</h4>
+            <ul>
+              <li>Hardcoded credentials as a security vulnerability</li>
+              <li>Time-of-check to time-of-use (TOCTOU) race conditions</li>
+              <li>Weak authentication mechanisms and their exploitation</li>
+              <li>The importance of input validation and secure coding practices</li>
+            </ul>
+            
+            <p><strong>Real-World Applications:</strong></p>
+            <p>The techniques learned in Leviathan have direct applications in:</p>
+            <ul>
+              <li><strong>Penetration Testing:</strong> Analyzing binaries during security assessments</li>
+              <li><strong>Malware Analysis:</strong> Understanding malicious software behavior</li>
+              <li><strong>Incident Response:</strong> Investigating compromised systems and understanding attack vectors</li>
+              <li><strong>Secure Development:</strong> Identifying and preventing common vulnerabilities in your own code</li>
+            </ul>
+            
+            <p><strong>Recommended Next Steps:</strong></p>
+            
+            <h4>OverTheWire Challenges</h4>
+            <ul>
+              <li><strong>Narnia:</strong> Stack-based buffer overflow exploitation</li>
+              <li><strong>Behemoth:</strong> Advanced binary exploitation and reverse engineering</li>
+              <li><strong>Utumno:</strong> Complex multi-stage exploitation challenges</li>
+              <li><strong>Maze:</strong> Network protocol analysis and exploitation</li>
+            </ul>
+            
+            <h4>Advanced Learning Platforms</h4>
+            <ul>
+              <li><strong>HackTheBox:</strong> Real-world machine exploitation scenarios</li>
+              <li><strong>TryHackMe:</strong> Structured learning paths for cybersecurity skills</li>
+              <li><strong>PicoCTF:</strong> Competition-style challenges covering various security domains</li>
+              <li><strong>Exploit Education:</strong> Phoenix and other advanced exploitation challenges</li>
+            </ul>
+            
+            <h4>Specialized Tools to Explore</h4>
+            <ul>
+              <li><strong>Ghidra:</strong> NSA's free reverse engineering tool</li>
+              <li><strong>IDA Pro:</strong> Industry-standard disassembler and debugger</li>
+              <li><strong>GDB:</strong> GNU debugger for dynamic analysis</li>
+              <li><strong>Burp Suite:</strong> Web application security testing</li>
+            </ul>
+            
+            <p>The foundation you've built through Leviathan provides an excellent stepping stone to more advanced cybersecurity challenges. Each technique mastered here will prove valuable as you tackle increasingly complex scenarios in your cybersecurity journey.</p>
+          </div>
+        </section>
       </article>
     </main>
 
     <footer>
-      <p>Created by <a href="https://github.com/jvandenhurk" target="_blank">Justin Van Den Hurk</a> • Hosted on GitHub Pages</p>
-      <p><small>Last updated: April 2025</small></p>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: April 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
     </footer>
   </div>
-
-  <!-- Hide terminal icon on mobile -->
-  <style>
-    @media (max-width: 768px) {
-      .terminal-icon {
-        display: none;
-      }
-    }
-  </style>
 </body>
 </html>

@@ -2,37 +2,64 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📝 CTF Writeups</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Technical Writeups & Tutorials | Justin Van Den Hurk</title>
   <link rel="stylesheet" href="assets/style.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Space+Grotesk:wght@400;700&family=IBM+Plex+Mono&display=swap">
-  <meta name="description" content="Writeups for CTFs, vulnerable machines, and pentesting challenges.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Comprehensive technical writeups, tutorials, and guides covering cybersecurity, system administration, virtualization, and technology implementations.">
+  <meta name="keywords" content="tutorials, writeups, cybersecurity, system administration, proxmox, virtualization, CTF, penetration testing, technical guides">
+  <meta name="author" content="Justin Van Den Hurk">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>📝 CTF Writeups</h1>
+      <h1>Technical Writeups</h1>
+      <p class="subtitle">Tutorials and Guides</p>
     </header>
+
+    <nav role="navigation" aria-label="Main navigation">
+      <ul>
+        <li><a href="#overthewire">OverTheWire</a></li>
+        <li><a href="#proxmox">Proxmox</a></li>
+      </ul>
+    </nav>
 
     <main>
       <section id="overthewire">
-        <article>
-          <h2><a href="./writeups/bandit.html">OverTheWire - Bandit</a></h2>
-          <h4 class="date">Published: April 24, 2025</h4>
-          <p>Bandit is a wargame on OverTheWire that focuses on learning basic Linux skills, such as navigating the file system, using SSH, and working with permissions.</p>
-        </article>
-
-            <article>
-              <h2><a href="./writeups/leviathan.html">OverTheWire - Leviathan</a></h2>
-              <h4 class="date">Published: April 14, 2025</h4>
-              <p>Leviathan is a wargame on OverTheWire that doesn't require programming just Linux terminal skills.</p>
-            </article>
+        <h2>OverTheWire Challenges</h2>
+        
+        <div class="bullet-list">
+          <ul>
+            <li>
+              <article>
+                <h3><a href="./writeups/bandit.html">Bandit Wargame</a></h3>
+                <p class="text-muted">Published: April 24, 2025</p>
+                <p>Comprehensive walkthrough of the Bandit wargame focusing on essential Linux command-line skills, SSH usage, file system navigation, and permission management. Perfect for beginners looking to build foundational cybersecurity skills.</p>
+              </article>
+            </li>
+            
+            <li>
+              <article>
+                <h3><a href="./writeups/leviathan.html">Leviathan Challenge</a></h3>
+                <p class="text-muted">Published: April 14, 2025</p>
+                <p>Step-by-step solution for the Leviathan wargame series. This challenge emphasizes practical Linux terminal skills without requiring programming knowledge, making it ideal for developing hands-on security expertise.</p>
+              </article>
+            </li>
+          </ul>
+        </div>
       </section>
-
-      <footer>
-        <p>Created by<a href="https://github.com/jvandenhurk" target="_blank"> Justin Van Den Hurk</a> • Hosted on GitHub Pages</p>
-      </footer>
+      
     </main>
+
+    <footer>
+      <p>
+        Created by <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+    </footer>
   </div>
 </body>
 </html>
