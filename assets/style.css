@@ -419,10 +419,6 @@ html {
   .challenge-info {
     padding: 1.5rem;
   }
-
-  nav ul {
-    justify-content: flex-start;
-  }
 }
 
 @media (max-width: 480px) {
@@ -436,12 +432,6 @@ html {
   
   .container {
     padding: 1.5rem 1rem;
-  }
-  
-  nav ul {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: stretch;
   }
   
   nav ul li a {
