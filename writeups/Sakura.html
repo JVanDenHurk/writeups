@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sakura Room Walkthrough</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the TryHackMe Sakura room using OSINT techniques to track down an attacker through digital footprints.">
+  <meta name="keywords" content="sakura, tryhackme, OSINT, walkthrough, cybersecurity, investigation, digital forensics">
+  <meta name="author" content="Justin Van Den Hurk">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>Sakura Room Walkthrough</h1>
+      <p class="subtitle">OSINT Investigation Challenge</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: September 18, 2025</span>
+          <span class="text-muted">Difficulty: Easy</span>
+        </div>
+        <p>Sakura Room on <a href="https://tryhackme.com/room/sakura" target="_blank" rel="noopener noreferrer">TryHackMe</a> is an OSINT (Open Source Intelligence) challenge that teaches you how to track attackers through their digital footprints. Using various online investigation techniques, you'll piece together clues to identify and locate a cybercriminal.</p>
+      </div>
+    </header>
+
+    <nav id="pre-security-nav">
+      <ul class="section-nav">
+        <li><a href="#task-1">Task 1: Introduction</a></li>
+        <li><a href="#task-2">Task 2: Tip-Off</a></li>
+        <li><a href="#task-3">Task 3: Reconnaissance</a></li>
+        <li><a href="#task-4">Task 4: Unveil</a></li>
+        <li><a href="#task-5">Task 5: Taunt</a></li>
+        <li><a href="#task-6">Task 6: Homebound</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <article>
+        <section id="task-1">
+          <h2>Task 1: Introduction</h2>
+          
+          <div class="level-solution">
+            <h3>Getting Started</h3>
+            <p><strong>Objective:</strong> Begin the investigation by acknowledging the briefing.</p>
+            
+            <p>This task serves as an introduction to the Sakura room. You're presented with the scenario where an attacker has left behind digital evidence that needs to be investigated using OSINT techniques.</p>
+            
+            <p>Simply type the required phrase to proceed:</p>
+            <pre><code>Let's Go!</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>OSINT investigations require patience, attention to detail, and the ability to connect seemingly unrelated pieces of information across multiple platforms and data sources.</p>
+          </div>
+        </section>
+        <section id="task-2">
+          <h2>Task 2: Tip-Off</h2>
+          
+          <div class="level-solution">
+            <h3>Image Analysis and Metadata Extraction</h3>
+            <p><strong>Objective:</strong> Find the username of the attacker using the image they left behind.</p>
+            
+            <p>Navigate to the provided link containing the suspicious image. This task demonstrates how attackers often leave unintentional clues in file metadata.</p>
+            
+            <p><strong>Investigation Steps:</strong></p>
+            <ol>
+              <li>Right-click on the image in your browser</li>
+              <li>Select "Inspect" or "Inspect Element" from the context menu</li>
+              <li>Look through the HTML markup in the Elements/Inspector tab</li>
+              <li>Search for any metadata or embedded information</li>
+            </ol>
+            
+            <p>In the markup, you'll find a key piece of evidence under the <code>inkscape:export-filename</code> attribute:</p>
+            <pre><code>/home/SakuraSnowAngelAiko/Desktop/pwnedletter.png</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩: SakuraSnowAngelAiko</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>File metadata often contains valuable information about the creator, including usernames, file paths, and creation timestamps. Always inspect images thoroughly during investigations.</p>
+          </div>
+        </section>
+
+        <section id="task-3">
+          <h2>Task 3: Reconnaissance</h2>
+          
+          <div class="level-solution">
+            <h3>Social Media Investigation</h3>
+            <p><strong>Objective:</strong> Gather personal information about the attacker through online presence.</p>
+            
+            <p>Now that you have the username, it's time to conduct reconnaissance across social media platforms and online services.</p>
+            
+            <p><strong>Step 1: Google Search</strong></p>
+            <p>Search for "SakuraSnowAngelAiko" in Google. This will reveal the attacker's presence on multiple platforms:
+            <ul>
+              <li>GitHub profile</li>
+              <li>X (Twitter) account</li>
+            </ul>
+            </p>
+
+            <p><strong>Step 2: GitHub Investigation</strong></p>
+            <p>Visit the attacker's GitHub profile and look for repositories. You'll find a repo called "PGP" containing a public key file.</p>
+            <p>Download the public key and upload it to <a href="https://keys.openpgp.org/upload" target="_blank" rel="noopener noreferrer">keys.openpgp.org</a> to extract associated email information.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Email: sakurasnowangel83@protonmail.com</strong>
+            </div>
+            
+            <p><strong>Step 3: X (Twitter) Profile Analysis</strong></p>
+            <p>Navigate to the attacker's X profile and examine their posts. Look for personal information in their introduction or bio posts.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Real Name: Aiko Abe</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Attackers often reuse usernames across platforms. PGP keys contain valuable identifying information, and social media profiles frequently reveal personal details through casual posts.</p>
+          </div>
+        </section>
+
+        <section id="task-4">
+          <h2>Task 4: Unveil</h2>
+          
+          <div class="level-solution">
+            <h3>Cryptocurrency and Blockchain Investigation</h3>
+            <p><strong>Objective:</strong> Uncover the attacker's cryptocurrency activities and wallet information.</p>
+            
+            <p><strong>Step 1: Repository Analysis</strong></p>
+            <p>Return to the attacker's GitHub profile and examine all repositories. Look for one named "ETH" and investigate its commit history.</p>
+            
+            <p>Find commit ID <code>d507757</code> where you'll discover references to "ethwallet" - indicating Ethereum cryptocurrency usage.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Cryptocurrency Type: Ethereum</strong>
+            </div>
+            
+            <p><strong>Step 2: Wallet Address Discovery</strong></p>
+            <p>Examine the first commit, which was an unsanitized submission revealing the full blockchain address.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Wallet Address: 0xa102397dbeeBeFD8cD2F73A89122fCdB53abB6ef</strong>
+            </div>
+            
+            <p><strong>Step 3: Blockchain Analysis</strong></p>
+            <p>Visit <a href="https://etherscan.io/" target="_blank" rel="noopener noreferrer">Etherscan</a> and search for the wallet address. Navigate to "View all transactions" and search for transactions on January 23, 2021 (2021-01-23).</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Mining Pool: Ethermine</strong>
+            </div>
+            
+            <p><strong>Step 4: Token Transfer Analysis</strong></p>
+            <p>Examine the token transfers to identify other cryptocurrencies used by the attacker.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Additional Cryptocurrency: Tether</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Cryptocurrency transactions are publicly visible on blockchain explorers. Git commits can accidentally expose sensitive information, and mining pools can reveal patterns of cryptocurrency activity.</p>
+          </div>
+        </section>
+
+        <section id="task-5">
+          <h2>Task 5: Taunt</h2>
+          
+          <div class="level-solution">
+            <h3>Dark Web Investigation and WiFi Analysis</h3>
+            <p><strong>Objective:</strong> Track down WiFi access point information through dark web sources.</p>
+            
+            <p><strong>Step 1: Current Username Update</strong></p>
+            <p>Check the attacker's current X (Twitter) username, as they may have changed it.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Current Username: SakuraLoverAiko</strong>
+            </div>
+            
+            <p><strong>Step 2: Dark Web Investigation</strong></p>
+            <p><em>Note: This task is currently reported as broken on TryHackMe, but here's the intended solution methodology:</em></p>
+            
+            <p>The attacker posts about forgetting their access points with hints about the "Dark Web," "DEEP search," and "PASTEd." This points to Deep Paste, a dark web service.</p>
+            
+            <p><strong>Investigation Process:</strong></p>
+            <ol>
+              <li>Use Tor browser to access the dark web</li>
+              <li>Find the Deep Paste onion link</li>
+              <li>Search for MD5 hash: <code>0a5c6e136a98a60b8a21643ce8c15a74</code></li>
+              <li>Locate the access point notes revealing Home WiFi: <code>DK1F-G</code></li>
+            </ol>
+            
+            <p><strong>Step 3: WiFi Network Analysis</strong></p>
+            <p>Use <a href="https://wigle.net" target="_blank" rel="noopener noreferrer">WiGLE</a> (WiFi database) to investigate:</p>
+            <ol>
+              <li>Create an account on WiGLE.net</li>
+              <li>Navigate to Advanced Search</li>
+              <li>Enter "DK1F-G" in SSID Exact Match</li>
+              <li>Retrieve the MAC address from results</li>
+            </ol>
+            
+            <div class="flag-container">
+              <strong>🚩 MAC Address: 84:af:ec:34:fc:f8</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Dark web services can expose sensitive information. WiFi networks have unique identifiers that can be tracked through databases like WiGLE, making them valuable for location intelligence.</p>
+          </div>
+        </section>
+
+        <section id="task-6">
+          <h2>Task 6: Homebound</h2>
+          
+          <div class="level-solution">
+            <h3>Geolocation and Travel Analysis</h3>
+            <p><strong>Objective:</strong> Track the attacker's travel route using social media posts and geographical analysis.</p>
+            
+            <p><strong>Step 1: Washington DC Location</strong></p>
+            <p>Analyze the attacker's social media post about cherry blossoms. The Washington Monument visible in the background indicates Washington DC location.</p>
+            <p>Research the closest airport to determine their departure point.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Airport Code: DCA (Ronald Reagan Washington National Airport)</strong>
+            </div>
+            
+            <p><strong>Step 2: Japan Layover Investigation</strong></p>
+            <p>The attacker posts about relaxing in a "final layover" at a JAL Sakura lounge. Search for "JAL Sakura lounge" and examine review images.</p>
+            <p>Cross-reference with aviation reviews to identify Tokyo Haneda Airport.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Layover Airport: HND (Tokyo Haneda)</strong>
+            </div>
+            
+            <p><strong>Step 3: Final Destination Analysis</strong></p>
+            <p>Examine the attacker's photo of their final destination in Japan. Use Google Maps and image comparison to identify the geographical features.</p>
+            <p>The distinctive landscape matches the area around Lake Inawashiro.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Location: Lake Inawashiro</strong>
+            </div>
+            
+            <p><strong>Step 4: Final WiFi Network</strong></p>
+            <p>Review the Deep Paste information again and identify the "City Free Wifi" network assigned to the area.</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Final Location: Hirosaki</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Social media posts contain rich geolocation data through landmarks, airport lounges, and distinctive geographical features. Travel patterns can be reconstructed through careful analysis of posting timestamps and locations.</p>
+          </div>
+        </section>
+
+        <section id="conclusion">
+          <h2>Investigation Complete</h2>
+          
+          <div class="level-solution">
+            <h3>OSINT Methodology Summary</h3>
+            <p><strong>What You've Learned:</strong></p>
+            
+            <p>This investigation demonstrated several key OSINT techniques:</p>
+            <ul>
+              <li><strong>Metadata Analysis:</strong> Extracting usernames from file metadata</li>
+              <li><strong>Cross-Platform Investigation:</strong> Connecting accounts across GitHub, X, and other services</li>
+              <li><strong>Cryptocurrency Tracking:</strong> Using blockchain explorers for financial intelligence</li>
+              <li><strong>Dark Web Research:</strong> Investigating hidden services for leaked information</li>
+              <li><strong>Geolocation Intelligence:</strong> Using landmarks and travel patterns for location tracking</li>
+              <li><strong>Network Analysis:</strong> Tracking WiFi networks and MAC addresses</li>
+            </ul>
+            
+            <p><strong>Professional Applications:</strong></p>
+            <p>These techniques are valuable for:</p>
+            <ul>
+              <li>Incident response and threat hunting</li>
+              <li>Digital forensics investigations</li>
+              <li>Cybersecurity threat intelligence</li>
+              <li>Law enforcement digital investigations</li>
+            </ul>
+            
+            <p><strong>Next Steps:</strong></p>
+            <p>Continue developing your OSINT skills with:</p>
+            <ul>
+              <li>More TryHackMe OSINT rooms</li>
+              <li>Real-world practice on public information</li>
+              <li>Learning specialized OSINT tools like Maltego, Shodan, or theHarvester</li>
+              <li>Understanding legal and ethical boundaries of information gathering</li>
+            </ul>
+          </div>
+        </section>
+      </article>
+      
+    </main>
+
+    <footer>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: September 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
+    </footer>
+  </div>
+</body>
+</html>
