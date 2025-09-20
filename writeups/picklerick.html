@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pickle Rick Walkthrough</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the TryHackMe Pickle Rick room featuring web exploitation, command injection, and privilege escalation techniques.">
+  <meta name="keywords" content="pickle rick, tryhackme, web exploitation, command injection, walkthrough, cybersecurity, CTF">
+  <meta name="author" content="Justin Van Den Hurk">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>Pickle Rick Walkthrough</h1>
+      <p class="subtitle">Web Exploitation Challenge</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: September 20, 2025</span>
+          <span class="text-muted">Difficulty: Easy</span>
+        </div>
+        <p>Pickle Rick is a Rick and Morty themed challenge on <a href="https://tryhackme.com/room/picklerick" target="_blank" rel="noopener noreferrer">TryHackMe</a> that focuses on web exploitation techniques including reconnaissance, command injection, and privilege escalation. Help Rick find the three secret ingredients to turn himself back into a human!</p>
+      </div>
+    </header>
+
+    <nav id="pre-security-nav">
+      <ul class="section-nav">
+        <li><a href="#reconnaissance">Reconnaissance</a></li>
+        <li><a href="#web-exploitation">Web Exploitation</a></li>
+        <li><a href="#command-injection">Command Injection</a></li>
+        <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <article>
+        <section id="reconnaissance">
+          <h2>Reconnaissance Phase</h2>
+          
+          <div class="level-solution">
+            <h3>Initial Port Scanning</h3>
+            <p><strong>Objective:</strong> Discover open services and ports on the target machine.</p>
+            
+            <p>Start with a comprehensive port scan to identify running services:</p>
+            <pre><code>nmap -sC -sV -oN initial_scan.txt &lt;TARGET_IP&gt;</code></pre>
+            
+            <p>The scan reveals:</p>
+            <ul>
+              <li><strong>Port 22 (SSH):</strong> OpenSSH service running</li>
+              <li><strong>Port 80 (HTTP):</strong> Apache web server</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Always start with reconnaissance to understand the attack surface. SSH and HTTP services suggest potential web application vulnerabilities and possible remote access opportunities.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Web Application Analysis</h3>
+            <p><strong>Objective:</strong> Examine the web application for initial clues and vulnerabilities.</p>
+            
+            <p>Navigate to the target IP address in your browser to view the main page. You'll see a Rick and Morty themed website.</p>
+            
+            <p><strong>Source Code Analysis:</strong></p>
+            <p>Right-click on the page and select "View Page Source" or "Inspect Element". In the HTML source code, you'll discover a hidden comment:</p>
+            <pre><code>&lt;!-- Note to self, remember username! Username: R1ckRul3s --&gt;</code></pre>
+            
+            <div class="flag-container">
+              <strong>Username Found: R1ckRul3s</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>HTML source code often contains developer comments, hidden fields, or metadata that can reveal sensitive information. Always inspect the source code during web application testing.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Robots.txt Discovery</h3>
+            <p><strong>Objective:</strong> Check for additional information in the robots.txt file.</p>
+            
+            <p>Navigate to <code>http://&lt;TARGET_IP&gt;/robots.txt</code> to check for any disallowed directories or sensitive information.</p>
+            
+            <p>The robots.txt file contains:</p>
+            <pre><code>Wubbalubbadubdub</code></pre>
+            
+            <div class="flag-container">
+              <strong>Potential Password: Wubbalubbadubdub</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>The robots.txt file is often used to hide directories from search engines but can reveal interesting paths and information to attackers. This appears to be a password or key phrase.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Directory Enumeration</h3>
+            <p><strong>Objective:</strong> Discover hidden directories and files using automated tools.</p>
+            
+            <p>Use Gobuster to enumerate directories and files:</p>
+            <pre><code>gobuster dir -u http://&lt;TARGET_IP&gt; -w /opt/wordlists/SecLists/Discovery/Web-Content/directory-list-2.3-medium.txt</code></pre>
+            
+            <p>Alternative using a different wordlist:</p>
+            <pre><code>gobuster dir -u http://&lt;TARGET_IP&gt; -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</code></pre>
+            
+            <p>Key discoveries include:</p>
+            <ul>
+              <li><code>/login.php</code> - Login page</li>
+              <li><code>/assets/</code> - Static resources</li>
+              <li><code>/portal.php</code> - Potential admin portal</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Directory enumeration helps discover hidden functionality that might not be linked from the main page. The login.php file suggests we can use our discovered credentials.</p>
+          </div>
+        </section>
+
+        <section id="web-exploitation">
+          <h2>Web Exploitation</h2>
+          
+          <div class="level-solution">
+            <h3>Authentication Bypass</h3>
+            <p><strong>Objective:</strong> Access the admin portal using discovered credentials.</p>
+            
+            <p>Navigate to <code>http://&lt;TARGET_IP&gt;/login.php</code> and attempt to log in using:</p>
+            <ul>
+              <li><strong>Username:</strong> R1ckRul3s</li>
+              <li><strong>Password:</strong> Wubbalubbadubdub</li>
+            </ul>
+            
+            <p>Before logging in, inspect the page source again. You may notice what appears to be an encoded string:</p>
+            <pre><code>Vm1wR1UxTnRWa2RUV0d4VFlrZFNjRlV3V2t0alJsWnlWbXQwVkUxV1duaFZNakExVkcxS1NHVkliRmhoTVhCb1ZsWmFWMVpWTVVWaGVqQT0==</code></pre>
+            
+            <p>This appears to be Base64 encoded, but upon decoding reveals itself to be a red herring (honeypot).</p>
+            
+            <p>After successful login, you'll be redirected to a command panel at <code>portal.php</code>.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Not all discovered information is useful - some may be intentional misdirection. Focus on what actually leads to system access.</p>
+          </div>
+        </section>
+
+        <section id="command-injection">
+          <h2>Command Injection</h2>
+          
+          <div class="level-solution">
+            <h3>Command Panel Exploitation</h3>
+            <p><strong>Objective:</strong> Execute system commands through the web interface to find the first ingredient.</p>
+            
+            <p>The portal.php page provides a command input field. Test basic Linux commands:</p>
+            
+            <p><strong>Directory Listing:</strong></p>
+            <pre><code>ls</code></pre>
+            
+            <p>This reveals several files:</p>
+            <ul>
+              <li>Sup3rS3cretPickl3Ingred.txt</li>
+              <li>assets/</li>
+              <li>clue.txt</li>
+              <li>denied.php</li>
+              <li>index.html</li>
+              <li>login.php</li>
+              <li>portal.php</li>
+              <li>robots.txt</li>
+            </ul>
+            
+            <p><strong>First Ingredient Discovery:</strong></p>
+            <p>Navigate directly to the file: <code>http://&lt;TARGET_IP&gt;/Sup3rS3cretPickl3Ingred.txt</code></p>
+            
+            <div class="flag-container">
+              <strong>🚩 First Ingredient: mr. meeseek hair</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Command injection vulnerabilities allow attackers to execute arbitrary system commands. Always test with basic commands like <code>ls</code>, <code>pwd</code>, and <code>whoami</code>.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>User Directory Exploration</h3>
+            <p><strong>Objective:</strong> Navigate to user directories to find the second ingredient.</p>
+            
+            <p>Explore the home directory structure:</p>
+            <pre><code>ls /home/</code></pre>
+            
+            <p>This reveals a user directory:</p>
+            <pre><code>ls /home/rick/</code></pre>
+            
+            <p>You'll find a file named "second ingredients" (note the space in the filename).</p>
+            
+            <p><strong>Reading Restricted Files:</strong></p>
+            <p>Attempting to use <code>cat</code> on the file results in a "command disabled" message, indicating certain commands are blacklisted.</p>
+            <pre><code>cat /home/rick/'second ingredients'</code></pre>
+            
+            <p><strong>Bypassing Command Restrictions:</strong></p>
+            <p>Use alternative commands to read files:</p>
+            <pre><code>less /home/rick/'second ingredients'</code></pre>
+            
+            <p>Alternative methods:</p>
+            <ul>
+              <li><code>more /home/rick/'second ingredients'</code></li>
+              <li><code>head /home/rick/'second ingredients'</code></li>
+              <li><code>tail /home/rick/'second ingredients'</code></li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>🚩 Second Ingredient: 1 jerry tear</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>When specific commands are blacklisted, try alternative commands with similar functionality. File names with spaces require proper quoting.</p>
+          </div>
+        </section>
+
+        <section id="privilege-escalation">
+          <h2>Privilege Escalation</h2>
+          
+          <div class="level-solution">
+            <h3>Sudo Privilege Check</h3>
+            <p><strong>Objective:</strong> Determine available sudo privileges and access root-owned files.</p>
+            
+            <p>Check what sudo privileges are available:</p>
+            <pre><code>sudo -l</code></pre>
+            
+            <p>If the www-data user has sudo privileges (which is common in CTF environments), you can execute commands as root without a password.</p>
+            
+            <p><strong>Root Directory Exploration:</strong></p>
+            <pre><code>sudo ls /root</code></pre>
+            
+            <p>This reveals files in the root directory, including <code>3rd.txt</code>.</p>
+            
+            <p><strong>Final Ingredient Retrieval:</strong></p>
+            <pre><code>sudo less /root/3rd.txt</code></pre>
+            
+            <p>Alternative methods:</p>
+            <ul>
+              <li><code>sudo more /root/3rd.txt</code></li>
+              <li><code>sudo head /root/3rd.txt</code></li>
+              <li><code>sudo tail /root/3rd.txt</code></li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>🚩 Third Ingredient: fleeb juice</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Misconfigured sudo privileges are a common privilege escalation vector. Always check <code>sudo -l</code> to see what commands can be run as other users.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Additional Exploration Techniques</h3>
+            <p><strong>Objective:</strong> Learn alternative methods for system exploration and file access.</p>
+            
+            <p><strong>System Information Gathering:</strong></p>
+            <pre><code>whoami
+id
+uname -a
+ps aux</code></pre>
+            
+            <p><strong>Alternative File Reading Methods:</strong></p>
+            <p>If standard commands are blocked, try these alternatives:</p>
+            <ul>
+              <li><code>strings filename</code> - Extract readable strings</li>
+              <li><code>hexdump -C filename</code> - Hex dump with ASCII</li>
+              <li><code>od -c filename</code> - Octal dump with characters</li>
+              <li><code>base64 filename</code> - Base64 encode (then decode elsewhere)</li>
+            </ul>
+            
+            <p><strong>Command Alternatives:</strong></p>
+            <ul>
+              <li>Instead of <code>cat</code>: use <code>less</code>, <code>more</code>, <code>head</code>, <code>tail</code></li>
+              <li>Instead of <code>ls</code>: use <code>dir</code>, <code>find . -maxdepth 1</code></li>
+              <li>Instead of <code>whoami</code>: use <code>id</code></li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Command injection defenses often use blacklists rather than whitelists. Learning multiple ways to accomplish the same task helps bypass security filters.</p>
+          </div>
+        </section>
+
+        <section id="summary">
+          <h2>Challenge Summary</h2>
+          
+          <div class="level-solution">
+            <h3>Complete Solution Path</h3>
+            <p><strong>Attack Chain Overview:</strong></p>
+            
+            <ol>
+              <li><strong>Reconnaissance:</strong> Port scanning revealed web application on port 80</li>
+              <li><strong>Information Disclosure:</strong> HTML source code revealed username</li>
+              <li><strong>Password Discovery:</strong> robots.txt contained the password</li>
+              <li><strong>Authentication:</strong> Valid credentials provided access to admin panel</li>
+              <li><strong>Command Injection:</strong> Web portal allowed arbitrary command execution</li>
+              <li><strong>Privilege Escalation:</strong> Sudo privileges enabled root file access</li>
+            </ol>
+            
+            <p><strong>Three Secret Ingredients:</strong></p>
+            <div class="flag-container">
+              <strong>1. mr. meeseek hair</strong><br>
+              <strong>2. 1 jerry tear</strong><br>
+              <strong>3. fleeb juice</strong>
+            </div>
+            
+            <p><strong>Technical Skills Demonstrated:</strong></p>
+            <ul>
+              <li>Network reconnaissance and port scanning</li>
+              <li>Web application source code analysis</li>
+              <li>Directory and file enumeration</li>
+              <li>Command injection exploitation</li>
+              <li>Command filter bypass techniques</li>
+              <li>Privilege escalation via sudo misconfiguration</li>
+              <li>Alternative file reading methods</li>
+            </ul>
+            
+            <p><strong>Real-World Applications:</strong></p>
+            <p>This challenge demonstrates common web application vulnerabilities:</p>
+            <ul>
+              <li><strong>Information Disclosure:</strong> Sensitive data in HTML comments</li>
+              <li><strong>Weak Authentication:</strong> Credentials exposed in accessible files</li>
+              <li><strong>Command Injection:</strong> Insufficient input validation</li>
+              <li><strong>Privilege Escalation:</strong> Overprivileged service accounts</li>
+            </ul>
+            
+            <p><strong>Mitigation Strategies:</strong></p>
+            <ul>
+              <li>Remove sensitive comments from production code</li>
+              <li>Implement proper input validation and sanitization</li>
+              <li>Use parameterized queries and avoid direct command execution</li>
+              <li>Follow principle of least privilege for service accounts</li>
+              <li>Regular security testing and code reviews</li>
+            </ul>
+          </div>
+        </section>
+      </article>
+      
+    </main>
+
+    <footer>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: September 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
+    </footer>
+  </div>
+</body>
+</html>
