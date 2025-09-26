@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bandit Walkthrough</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the OverTheWire Bandit wargame with detailed solutions, commands, and learning outcomes for each level.">
+  <meta name="keywords" content="bandit, overthewire, CTF, walkthrough, linux, cybersecurity, wargame, solutions">
+  <meta name="author" content="Justin Van Den Hurk">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>Proxmox Installtion</h1>
+      <p class="subtitle">Easy setup guide</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: August 20, 2025</span>
+          <span class="text-muted">Recommended time: 30 mins</span>
+        </div>
+        <p>A simple guide on how to install proxmox on your device. Refer to the <a href="https://pve.proxmox.com/pve-docs/">documentation</a> for further information beyond the scope of this guide.</p>
+      </div>
+    </header>
+
+    <nav id="pre-security-nav">
+      <ul class="section-nav">
+        <li><a href="#Download">Dowload</a></li>
+        <li><a href="#level-10-19">Levels 10-19</a></li>
+        <li><a href="#level-20-29">Levels 20-29</a></li>    
+        <li><a href="#level-30-33">Levels 30-33</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <article>
+        <section id="Download">
+          <h2>Download proxmox</h2>
+          
+          <div class="level-solution">
+            <h3>Bandit Level 0</h3>
+            <p><strong>Objective:</strong> Log in to the server and find the password for the next level.</p>
+            
+            <p>First, log in to the server:</p>
+            <pre><code>ssh bandit.labs.overthewire.org -p 2220 -l bandit0</code></pre>
+            <p>When prompted, enter the password: <code>bandit0</code></p>
+            
+            <p>Once logged in, run the following commands:</p>
+            <ul>
+              <li><code>ls</code> – lists files in the current directory</li>
+              <li><code>cat readme</code> – reads the contents of the file</li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>🚩: ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p><code>SSH<d/code> lets you connect to a remote device. <code>ls</code> lists directories, and <code>cat</code> reads file contents.</p>
+          </div>
+
+        </article>
+      
+    </main>
+
+    <footer>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: April 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
+    </footer>
+  </div>
+</body>
+</html>
