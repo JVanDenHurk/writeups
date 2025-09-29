@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OhSINT Walkthrough</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the TryHackMe OhSINT room using OSINT techniques including EXIF metadata analysis, social media investigation, and WiFi network tracking.">
+  <meta name="keywords" content="ohsint, tryhackme, OSINT, exiftool, metadata, social media, wigle, geolocation, investigation">
+  <meta name="author" content="Justin Van Den Hurk">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>OhSINT Walkthrough</h1>
+      <p class="subtitle">Open Source Intelligence Investigation</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: September 29, 2025</span>
+          <span class="text-muted">Difficulty: Easy</span>
+        </div>
+        <p>OhSINT is an OSINT (Open Source Intelligence) challenge on <a href="https://tryhackme.com/room/ohsint" target="_blank" rel="noopener noreferrer">TryHackMe</a> that teaches fundamental investigation techniques using publicly available information. Learn to extract metadata from images, track social media profiles, and correlate information across multiple platforms.</p>
+      </div>
+    </header>
+
+    <nav id="pre-security-nav">
+      <ul class="section-nav">
+        <li><a href="#metadata-analysis">Metadata Analysis</a></li>
+        <li><a href="#social-media">Social Media Investigation</a></li>
+        <li><a href="#geolocation">Geolocation & WiFi</a></li>
+        <li><a href="#digital-footprint">Digital Footprint</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <article>
+        <section id="metadata-analysis">
+          <h2>Image Metadata Analysis</h2>
+          
+          <div class="level-solution">
+            <h3>EXIF Data Extraction</h3>
+            <p><strong>Objective:</strong> Extract metadata from the provided image to gather initial intelligence.</p>
+            
+            <p>Download the challenge image and use ExifTool to examine its metadata:</p>
+            <pre><code>exiftool WindowsXP_1551719014755.jpg</code></pre>
+            
+            <p><strong>Key Metadata Discovered:</strong></p>
+            <ul>
+              <li><strong>Copyright:</strong> OWoodflint</li>
+              <li><strong>GPS Latitude:</strong> 54 deg 17' 41.27" N</li>
+              <li><strong>GPS Longitude:</strong> 2 deg 15' 1.33" W</li>
+              <li><strong>GPS Position:</strong> 54 deg 17' 41.27" N, 2 deg 15' 1.33" W</li>
+              <li><strong>Image Dimensions:</strong> 1920x1080</li>
+              <li><strong>File Size:</strong> 234 KB</li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>Primary Lead: OWoodflint (Copyright holder)</strong>
+            </div>
+            
+            <p><strong>Alternative EXIF Tools:</strong></p>
+            <pre><code># Using exiv2
+exiv2 WindowsXP_1551719014755.jpg
+
+# Using ImageMagick
+identify -verbose WindowsXP_1551719014755.jpg
+
+# Online tools
+# - Jeffrey's Image Metadata Viewer
+# - Metapicz.com</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>EXIF metadata often contains valuable information including location data, camera settings, timestamps, and copyright information. Many devices automatically embed GPS coordinates in photos, making them valuable for geolocation.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>GPS Coordinate Analysis</h3>
+            <p><strong>Objective:</strong> Convert GPS coordinates to a meaningful location.</p>
+            
+            <p>The extracted GPS coordinates can be analyzed using various tools:</p>
+            
+            <p><strong>Google Maps Method:</strong></p>
+            <pre><code>54.294797, -2.250369</code></pre>
+            
+            <p>Enter these decimal coordinates directly into Google Maps to identify the location.</p>
+            
+            <p><strong>Alternative Mapping Tools:</strong></p>
+            <ul>
+              <li>Google Earth - For satellite imagery</li>
+              <li>OpenStreetMap - Open-source alternative</li>
+              <li>Bing Maps - Microsoft's mapping service</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>GPS coordinates in EXIF data pinpoint exact photo locations. Converting degrees/minutes/seconds to decimal format makes coordinates easier to use in mapping applications.</p>
+          </div>
+        </section>
+
+        <section id="social-media">
+          <h2>Social Media Investigation</h2>
+          
+          <div class="level-solution">
+            <h3>Initial Search and Profile Discovery</h3>
+            <p><strong>Objective:</strong> Locate the target's online presence using the copyright name as a starting point.</p>
+            
+            <p>Search for "OWoodflint" using Google and other search engines:</p>
+            <pre><code>Google Search: "OWoodflint"</code></pre>
+            
+            <p><strong>Platforms Discovered:</strong></p>
+            <ul>
+              <li><strong>X (Twitter):</strong> Active account with posts</li>
+              <li><strong>GitHub:</strong> Repository with personal information</li>
+              <li><strong>WordPress Blog:</strong> Personal blog with updates</li>
+            </ul>
+            
+            <p><strong>Search Engine Operators for Enhanced Results:</strong></p>
+            <pre><code># Search specific sites
+site:twitter.com OWoodflint
+site:github.com OWoodflint
+site:wordpress.com OWoodflint
+
+# Search for specific file types
+OWoodflint filetype:pdf
+OWoodflint filetype:doc</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Usernames often remain consistent across platforms, making it easy to connect various online accounts. Search engine operators help refine searches to specific platforms or file types.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>X (Twitter) Account Analysis</h3>
+            <p><strong>Objective:</strong> Extract information from the target's Twitter/X profile and posts.</p>
+            
+            <p>Navigate to the discovered X (Twitter) account for OWoodflint and examine:</p>
+            <ul>
+              <li>Profile information and bio</li>
+              <li>Posted tweets and media</li>
+              <li>Following and followers lists</li>
+              <li>Linked accounts and websites</li>
+            </ul>
+            
+            <p><strong>Key Finding - Avatar/Pet:</strong></p>
+            <div class="flag-container">
+              <strong>🚩 What is this user's avatar of? Cat</strong>
+            </div>
+            
+            <p><strong>BSSID Discovery:</strong></p>
+            <p>One of the tweets mentions or reveals a WiFi BSSID (MAC address of wireless access point):</p>
+            <div class="flag-container">
+              <strong>BSSID: B4:5D:50:AA:86:41</strong>
+            </div>
+            
+            <p><strong>Additional Twitter Analysis Techniques:</strong></p>
+            <ul>
+              <li>Check tweet timestamps for activity patterns</li>
+              <li>Examine replies and interactions</li>
+              <li>Look for location tags in tweets</li>
+              <li>Analyze hashtags used</li>
+              <li>Review media attachments for metadata</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Social media posts often reveal sensitive information inadvertently. WiFi BSSIDs can be used to geolocate individuals through databases like WiGLE.</p>
+          </div>
+        </section>
+
+        <section id="geolocation">
+          <h2>WiFi Network Geolocation</h2>
+          
+          <div class="level-solution">
+            <h3>WiGLE Database Investigation</h3>
+            <p><strong>Objective:</strong> Use the discovered BSSID to determine the target's location.</p>
+            
+            <p>Visit <a href="https://wigle.net" target="_blank" rel="noopener noreferrer">WiGLE.net</a> and search for the BSSID:</p>
+            <pre><code>BSSID: B4:5D:50:AA:86:41</code></pre>
+            
+            <p><strong>WiGLE Search Process:</strong></p>
+            <ol>
+              <li>Create a free WiGLE account if needed</li>
+              <li>Navigate to "Advanced Search"</li>
+              <li>Enter the BSSID in the search field</li>
+              <li>Review the map results</li>
+            </ol>
+            
+            <p><strong>Location Discovery:</strong></p>
+            <div class="flag-container">
+              <strong>🚩 Where has he gone on holiday? London</strong>
+            </div>
+            
+            <p><strong>SSID Discovery:</strong></p>
+            <p>Zooming in on the map reveals the network name (SSID):</p>
+            <div class="flag-container">
+              <strong>🚩 What is the SSID of the WAP he connected to? UnileverWiFi</strong>
+            </div>
+            
+            <p><strong>Alternative WiFi Lookup Methods:</strong></p>
+            <ul>
+              <li>Kismet - Wireless network detector</li>
+              <li>Wireless Geographic Logging Engine (WiGLE) API</li>
+              <li>Local wardriving databases</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>WiFi networks have unique identifiers (BSSIDs) that are cataloged in public databases. These databases can pinpoint physical locations based on wireless access points, making them valuable for OSINT investigations.</p>
+          </div>
+        </section>
+
+        <section id="digital-footprint">
+          <h2>Digital Footprint Analysis</h2>
+          
+          <div class="level-solution">
+            <h3>GitHub Repository Investigation</h3>
+            <p><strong>Objective:</strong> Examine the target's GitHub profile for additional personal information.</p>
+            
+            <p>Navigate to the GitHub profile: <code>https://github.com/OWoodfl1nt</code></p>
+            
+            <p><strong>Repository Analysis:</strong></p>
+            <p>Examine the "people_finder" repository for embedded information:</p>
+            <ul>
+              <li>README files</li>
+              <li>Code comments</li>
+              <li>Commit messages</li>
+              <li>Profile information</li>
+            </ul>
+            
+            <p><strong>Email Discovery:</strong></p>
+            <div class="flag-container">
+              <strong>🚩 What is his personal email address? OWoodflint@gmail.com</strong>
+            </div>
+            
+            <p><strong>GitHub Intelligence Gathering Techniques:</strong></p>
+            <pre><code># Check commit history
+git log --all --author="OWoodflint"
+
+# Search repository content
+grep -r "email" .
+grep -r "@gmail.com" .
+
+# Review GitHub profile
+# - Public repositories
+# - Contribution activity
+# - Starred repositories
+# - Following/followers</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Developers often inadvertently expose personal information in code repositories, commit messages, or profile configurations. GitHub profiles can reveal technical skills, interests, and contact information.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>WordPress Blog Investigation</h3>
+            <p><strong>Objective:</strong> Analyze the target's blog for travel plans and hidden information.</p>
+            
+            <p>Visit the WordPress blog: <code>https://oliverwoodflint.wordpress.com/</code></p>
+            
+            <p><strong>Blog Post Analysis:</strong></p>
+            <p>Review blog posts for mentions of travel plans, locations, or personal information.</p>
+            
+            <p><strong>Travel Destination Discovery:</strong></p>
+            <div class="flag-container">
+              <strong>🚩 Where is he going on holiday? New York</strong>
+            </div>
+            
+            <p><strong>Hidden Password Discovery:</strong></p>
+            <p>Examine the blog's source code or highlight text to reveal hidden information:</p>
+            
+            <p><strong>Method 1: Text Selection</strong></p>
+            <ol>
+              <li>Select all text on the page (Ctrl+A or Cmd+A)</li>
+              <li>Look for white text on white background</li>
+              <li>Hidden text becomes visible when highlighted</li>
+            </ol>
+            
+            <p><strong>Method 2: Source Code Inspection</strong></p>
+            <pre><code># Right-click → View Page Source
+# Or press Ctrl+U (Cmd+Option+U on Mac)
+# Search for suspicious CSS styling or hidden elements</code></pre>
+            
+            <p>Hidden password found in white text:</p>
+            <div class="flag-container">
+              <strong>🚩 What is the person's password? pennYDr0pper.!</strong>
+            </div>
+            
+            <p><strong>WordPress OSINT Techniques:</strong></p>
+            <ul>
+              <li>Check post metadata and timestamps</li>
+              <li>Review comment sections for interactions</li>
+              <li>Examine author profile information</li>
+              <li>Look for embedded media and their metadata</li>
+              <li>Check for hidden CSS styling tricks</li>
+              <li>Review older archived versions via Wayback Machine</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Personal blogs often contain detailed information about individuals' lives, plans, and activities. Hidden text techniques (white text on white background) are a common CTF challenge method but rarely effective security measure in real-world scenarios.</p>
+          </div>
+        </section>
+
+        <section id="summary">
+          <h2>Investigation Summary</h2>
+          
+          <div class="level-solution">
+            <h3>Complete OSINT Profile</h3>
+            <p><strong>Target Profile: OWoodflint (Oliver Woodflint)</strong></p>
+            
+            <p><strong>All Discovered Information:</strong></p>
+            <div class="flag-container">
+              <strong>🚩 Avatar: Cat</strong><br>
+              <strong>🚩 Current Location: London</strong><br>
+              <strong>🚩 WiFi SSID: UnileverWiFi</strong><br>
+              <strong>🚩 Email: OWoodflint@gmail.com</strong><br>
+              <strong>🚩 Travel Destination: New York</strong><br>
+              <strong>🚩 Password: pennYDr0pper.!</strong>
+            </div>
+            
+            <p><strong>OSINT Methodology Used:</strong></p>
+            <ol>
+              <li><strong>Initial Lead:</strong> EXIF metadata from image provided copyright holder name</li>
+              <li><strong>Username Correlation:</strong> Searched across multiple platforms using consistent username</li>
+              <li><strong>Social Media Analysis:</strong> Extracted information from Twitter/X posts</li>
+              <li><strong>Geolocation:</strong> Used BSSID to determine physical location via WiGLE</li>
+              <li><strong>Code Repository Review:</strong> Found email address in GitHub profile</li>
+              <li><strong>Blog Analysis:</strong> Discovered travel plans and hidden credentials</li>
+            </ol>
+            
+            <p><strong>Technical Skills Demonstrated:</strong></p>
+            <ul>
+              <li>EXIF metadata extraction and analysis</li>
+              <li>GPS coordinate interpretation and mapping</li>
+              <li>Cross-platform username correlation</li>
+              <li>Social media intelligence gathering</li>
+              <li>WiFi network geolocation via BSSID lookup</li>
+              <li>GitHub repository investigation</li>
+              <li>HTML source code analysis</li>
+              <li>Hidden content discovery techniques</li>
+            </ul>
+            
+            <p><strong>Tools and Resources Used:</strong></p>
+            <ul>
+              <li><strong>ExifTool:</strong> Image metadata extraction</li>
+              <li><strong>Google:</strong> Search engine and mapping</li>
+              <li><strong>WiGLE:</strong> WiFi network database</li>
+              <li><strong>Social Media Platforms:</strong> X (Twitter), GitHub, WordPress</li>
+              <li><strong>Browser DevTools:</strong> HTML source inspection</li>
+            </ul>
+            
+            <p><strong>Privacy and Security Implications:</strong></p>
+            <ul>
+              <li><strong>Metadata Risks:</strong> Images contain GPS coordinates and device information</li>
+              <li><strong>Username Reuse:</strong> Consistent usernames enable easy cross-platform tracking</li>
+              <li><strong>WiFi Exposure:</strong> Public WiFi networks can reveal location history</li>
+              <li><strong>Social Media Oversharing:</strong> Posts reveal personal information and future plans</li>
+              <li><strong>Code Repository Security:</strong> Personal information in public repositories</li>
+              <li><strong>Password Security:</strong> Weak passwords and public exposure create risk</li>
+            </ul>
+            
+            <p><strong>Defensive Recommendations:</strong></p>
+            <ul>
+              <li>Remove EXIF data from images before posting online</li>
+              <li>Use different usernames across platforms to prevent correlation</li>
+              <li>Avoid posting real-time location information or travel plans</li>
+              <li>Review privacy settings on all social media accounts</li>
+              <li>Use password managers and strong, unique passwords</li>
+              <li>Regularly audit your digital footprint</li>
+              <li>Be mindful of information shared in code repositories</li>
+              <li>Enable two-factor authentication on all accounts</li>
+            </ul>
+            
+            <p><strong>Real-World OSINT Applications:</strong></p>
+            <ul>
+              <li>Background checks and due diligence</li>
+              <li>Cybersecurity threat intelligence</li>
+              <li>Fraud investigation and prevention</li>
+              <li>Missing persons investigations</li>
+              <li>Corporate intelligence and competitive analysis</li>
+              <li>Journalism and fact-checking</li>
+              <li>Law enforcement investigations</li>
+            </ul>
+            
+            <p><strong>Ethical Considerations:</strong></p>
+            <p>OSINT techniques should be used responsibly and legally:</p>
+            <ul>
+              <li>Respect privacy boundaries and legal restrictions</li>
+              <li>Use information only for authorized purposes</li>
+              <li>Avoid harassment or stalking behaviors</li>
+              <li>Consider the context and purpose of your investigation</li>
+              <li>Be aware of local laws regarding data collection</li>
+            </ul>
+          </div>
+        </section>
+      </article>
+      
+    </main>
+
+    <footer>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: September 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
+    </footer>
+  </div>
+</body>
+</html>
