@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Investigating Windows Walkthrough</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the TryHackMe Investigating Windows room covering digital forensics, event log analysis, credential dumping detection, and incident response techniques.">
+  <meta name="keywords" content="investigating windows, tryhackme, digital forensics, event viewer, mimikatz, incident response, windows forensics, malware analysis">
+  <meta name="author" content="Justin Van Den Hurk">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>Investigating Windows Walkthrough</h1>
+      <p class="subtitle">Windows Digital Forensics & Incident Response</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: September 30, 2025</span>
+          <span class="text-muted">Difficulty: Easy</span>
+        </div>
+        <p>Investigating Windows is a digital forensics challenge on <a href="https://tryhackme.com/room/investigatingwindows" target="_blank" rel="noopener noreferrer">TryHackMe</a> that teaches incident response and forensic analysis techniques on Windows systems. Learn to analyze event logs, identify malicious activities, detect credential dumping, and uncover indicators of compromise.</p>
+      </div>
+    </header>
+
+    <nav id="pre-security-nav">
+      <ul class="section-nav">
+        <li><a href="#initial-connection">Initial Connection</a></li>
+        <li><a href="#system-analysis">System Analysis</a></li>
+        <li><a href="#event-log-forensics">Event Log Forensics</a></li>
+        <li><a href="#malware-detection">Malware Detection</a></li>
+        <li><a href="#network-forensics">Network Forensics</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <article>
+        <section id="initial-connection">
+          <h2>Initial Connection & Setup</h2>
+          
+          <div class="level-solution">
+            <h3>RDP Connection to Target</h3>
+            <p><strong>Objective:</strong> Connect to the Windows machine for forensic investigation.</p>
+            
+            <p>Use xfreerdp to establish a remote desktop connection:</p>
+            <pre><code>xfreerdp /u:&lt;Username&gt; /p:&lt;Password&gt; /v:&lt;Target_IP&gt;</code></pre>
+            
+            <p><strong>Alternative RDP Clients:</strong></p>
+            <pre><code># Using rdesktop
+                    rdesktop -u &lt;Username&gt; -p &lt;Password&gt; &lt;Target_IP&gt;
+
+                    # Using Remmina (GUI)
+                    remmina
+
+                    # Windows built-in
+                    mstsc.exe</code></pre>
+            
+            <p><strong>Connection Tips:</strong></p>
+            <ul>
+              <li>Use full screen mode for better investigation: <code>/f</code></li>
+              <li>Enable clipboard sharing: <code>/clipboard</code></li>
+              <li>Adjust resolution: <code>/size:1920x1080</code></li>
+            </ul>
+        </br>
+            <p><strong>Key Learnings:</strong></p>
+            <p>Remote desktop access allows forensic investigators to interact with compromised systems while preserving evidence. RDP is commonly used for Windows incident response and forensic analysis.</p>
+          </div>
+        </section>
+
+        <section id="system-analysis">
+          <h2>System Information Analysis</h2>
+          
+          <div class="level-solution">
+            <h3>Operating System Identification</h3>
+            <p><strong>Objective:</strong> Determine the Windows version and build information.</p>
+            
+            <p>Access System Information through multiple methods:</p>
+            
+            <p><strong>Method 1: GUI - System Properties</strong></p>
+            <ol>
+              <li>Right-click "This PC" or "My Computer"</li>
+              <li>Select "Properties"</li>
+              <li>Review system information</li>
+            </ol>
+            
+            <p><strong>Method 2: System Information Tool</strong></p>
+            <pre><code>msinfo32</code></pre>
+            
+            <p><strong>Method 3: Command Line</strong></p>
+            <pre><code>systeminfo | findstr /B /C:"OS Name" /C:"OS Version"</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 OS Version: Windows Server 2016</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Identifying the operating system version is crucial for understanding available security features, known vulnerabilities, and appropriate investigation techniques.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>User Account Analysis</h3>
+            <p><strong>Objective:</strong> Identify user accounts and their group memberships.</p>
+            
+            <p><strong>Computer Management Investigation:</strong></p>
+            <ol>
+              <li>Open Computer Management: <code>compmgmt.msc</code></li>
+              <li>Navigate to "Local Users and Groups"</li>
+              <li>Click on "Users" to view all accounts</li>
+              <li>Double-click each user to examine group memberships</li>
+            </ol>
+            
+            <p><strong>Command Line Method:</strong></p>
+            <pre><code># List all local users
+net user
+
+# Get detailed information about specific user
+net user Jenny</code></pre>
+            
+            <p><strong>Jenny's Account Details:</strong></p>
+            <pre><code>User name                    Jenny
+Full Name                    Jenny
+Account active               Yes
+Account expires              Never
+Password last set            3/2/2019 4:52:25 PM
+Password expires             Never
+Last logon                   Never
+Local Group Memberships      *Administrators       *Users</code></pre>
+            
+            <p><strong>Suspicious Findings:</strong></p>
+            <div class="flag-container">
+              <strong>🚩 Accounts that are part of the Administrators group: Guest, Jenny</strong><br>
+              <strong>🚩 When was Jenny's password last set? 03/02/2019</strong><br>
+              <strong>🚩 When did Jenny last logon? Never</strong>
+            </div>
+            
+            <p><strong>Analysis:</strong></p>
+            <p>Jenny is part of the Administrators group but has never logged in, which is highly suspicious. This could indicate a backdoor account created by an attacker.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Accounts with administrative privileges that have never been used are red flags during incident response. Guest accounts should typically be disabled and never have administrative rights.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Startup Programs Analysis</h3>
+            <p><strong>Objective:</strong> Identify programs configured to run at system startup.</p>
+            
+            <p><strong>System Information Method:</strong></p>
+            <ol>
+              <li>Open System Information: <code>msinfo32</code></li>
+              <li>Expand "Software Environment"</li>
+              <li>Click on "Startup Programs"</li>
+              <li>Review the list for suspicious entries</li>
+            </ol>
+        </br>
+            <p><strong>Alternative Methods:</strong></p>
+            <pre><code># Task Manager - Startup tab
+taskmgr
+
+# Registry locations
+reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+
+# Autoruns (Sysinternals)
+autorunsc.exe</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 Suspicious startup IP: 10.34.2.3</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Persistence mechanisms often use startup locations. Malware frequently adds itself to autostart entries to survive reboots.</p>
+          </div>
+        </section>
+
+        <section id="event-log-forensics">
+          <h2>Windows Event Log Analysis</h2>
+          
+          <div class="level-solution">
+            <h3>Security Event Log Investigation</h3>
+            <p><strong>Objective:</strong> Analyze Windows Event Logs to identify user activity and security events.</p>
+            
+            <p><strong>Accessing Event Viewer:</strong></p>
+            <pre><code>eventvwr.msc</code></pre>
+            
+            <p><strong>First Administrator Logon Discovery:</strong></p>
+            <ol>
+              <li>Navigate to Windows Logs → Security</li>
+              <li>Filter for Event ID 4624 (Successful logon)</li>
+              <li>Sort by date to find earliest logon</li>
+              <li>Look for Administrator account logons</li>
+            </ol>
+            
+            <div class="flag-container">
+              <strong>🚩 When did the first Administrator logon occur? Administrator</strong>
+            </div>
+            
+            <p><strong>John's Activity Timeline:</strong></p>
+            <ol>
+              <li>In Event Viewer, use Find feature (Ctrl+F)</li>
+              <li>Search for "John" in the security logs</li>
+              <li>Review matching events for activity patterns</li>
+            </ol>
+            
+            <div class="flag-container">
+              <strong>🚩 John's logon event: 03/02/2019 5:48:32 PM</strong>
+            </div>
+            
+            <p><strong>Key Event IDs for Investigation:</strong></p>
+            <ul>
+              <li><strong>4624:</strong> Successful logon</li>
+              <li><strong>4625:</strong> Failed logon attempt</li>
+              <li><strong>4672:</strong> Special privileges assigned</li>
+              <li><strong>4720:</strong> User account created</li>
+              <li><strong>4722:</strong> User account enabled</li>
+              <li><strong>4738:</strong> User account changed</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Windows Event Logs provide a detailed audit trail of system activities. Security logs are crucial for incident response and forensic investigations.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Suspicious Logon Analysis</h3>
+            <p><strong>Objective:</strong> Identify anomalous authentication events indicating potential compromise.</p>
+            
+            <p>A suspicious security log entry was discovered:</p>
+            <pre><code>Log Name:      Security
+Source:        Microsoft-Windows-Security-Auditing
+Date:          3/2/2019 4:04:49 PM
+Event ID:      4624
+Task Category: Logon
+User:          N/A
+
+Logon Information:
+  Logon Type:  5
+  
+New Logon:
+  Security ID:  SYSTEM
+  Account Name: SYSTEM
+  
+Process Information:
+  Process Name: C:\Windows\System32\services.exe</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 Suspicious logon timestamp: 03/02/2019 4:04:49 PM</strong>
+            </div>
+            
+            <p><strong>Logon Type Analysis:</strong></p>
+            <ul>
+              <li><strong>Type 2:</strong> Interactive (console logon)</li>
+              <li><strong>Type 3:</strong> Network (file shares, etc.)</li>
+              <li><strong>Type 5:</strong> Service (services starting)</li>
+              <li><strong>Type 7:</strong> Unlock (workstation unlocked)</li>
+              <li><strong>Type 10:</strong> RemoteInteractive (RDP)</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Understanding logon types helps differentiate between normal system activity and potential intrusions. Type 5 logons are typically benign service starts, but timing and context matter.</p>
+          </div>
+        </section>
+
+        <section id="malware-detection">
+          <h2>Malware and Persistence Detection</h2>
+          
+          <div class="level-solution">
+            <h3>Scheduled Task Analysis</h3>
+            <p><strong>Objective:</strong> Identify malicious scheduled tasks used for persistence.</p>
+            
+            <p><strong>Task Scheduler Investigation:</strong></p>
+            <ol>
+              <li>Open Task Scheduler: <code>taskschd.msc</code></li>
+              <li>Navigate to Task Scheduler Library</li>
+              <li>Review active tasks for suspicious entries</li>
+              <li>Examine task actions and triggers</li>
+            </ol>
+            
+            <div class="flag-container">
+              <strong>🚩 Suspicious scheduled task: Clean File System</strong>
+            </div>
+            
+            <p><strong>Task Details Analysis:</strong></p>
+            <p>Examining the "Clean File System" task reveals:</p>
+            <ul>
+              <li><strong>Action:</strong> <code>C:\TMP\nc.ps1 -l 1348</code></li>
+              <li><strong>Script:</strong> nc.ps1 (NetCat PowerShell script)</li>
+              <li><strong>Port:</strong> 1348</li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>🚩 Malicious script name: nc.ps1</strong><br>
+              <strong>🚩 Listening port: 1348</strong>
+            </div>
+            
+            <p><strong>Command Line Task Enumeration:</strong></p>
+            <pre><code># List all scheduled tasks
+schtasks /query /fo LIST /v
+
+# Export task details
+schtasks /query /tn "Clean File System" /xml</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Scheduled tasks are commonly abused for persistence. NetCat scripts in scheduled tasks indicate backdoor access mechanisms. Always verify task legitimacy and examine their actions.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Credential Dumping Detection</h3>
+            <p><strong>Objective:</strong> Identify evidence of credential theft tools and extracted passwords.</p>
+            
+            <p>Navigate to <code>C:\TMP\</code> directory and discover:</p>
+            <ul>
+              <li><code>mim.exe</code> - Mimikatz executable</li>
+              <li><code>mim-out.txt</code> - Mimikatz output file</li>
+            </ul>
+        </br>
+            <p><strong>Mimikatz Output Analysis:</strong></p>
+            <pre><code>mimikatz(powershell) # sekurlsa::logonpasswords
+
+User Name         : Ion
+Domain            : Ion-PC
+NTLM              : a4a9436b46f7e948b2417435b63d6cac
+Password          : MySecretP4ass</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 Tool used for credential dumping: mimikatz</strong>
+            </div>
+            
+            <p><strong>Mimikatz Indicators:</strong></p>
+            <ul>
+              <li>Executable often named: <code>mim.exe</code>, <code>m64.exe</code>, <code>mimikatz.exe</code></li>
+              <li>Dumps LSASS process memory</li>
+              <li>Extracts plaintext passwords, NTLM hashes, Kerberos tickets</li>
+              <li>Common commands: <code>sekurlsa::logonpasswords</code>, <code>lsadump::sam</code></li>
+            </ul>
+            
+            <p><strong>Detection Methods:</strong></p>
+            <pre><code># Check for suspicious processes
+tasklist | findstr "mim"
+
+# Review process command lines
+wmic process get name,commandline | findstr "sekurlsa"
+
+# Check for LSASS access
+Get-WinEvent -FilterHashtable @{LogName='Security';ID=4656} | Where-Object {$_.Message -like "*lsass.exe*"}</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Mimikatz is a powerful post-exploitation tool used by attackers to extract credentials from memory. Its presence indicates a serious compromise requiring immediate incident response.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Web Shell Detection</h3>
+            <p><strong>Objective:</strong> Identify malicious web shells planted for persistent remote access.</p>
+            
+            <p>Investigate the web server directory <code>C:\inetpub\wwwroot\</code>:</p>
+            <pre><code>03/02/2019  04:37 PM            74,853 b.jsp
+03/02/2019  04:37 PM            12,572 shell.gif
+03/02/2019  04:37 PM               657 tests.jsp</code></pre>
+            
+            <p><strong>Web Shell Indicators:</strong></p>
+            <ul>
+              <li>Unusual file extensions in webroot (.jsp, .jspx, .aspx)</li>
+              <li>Recently modified files with suspicious names</li>
+              <li>Files uploaded on the same date as suspicious activity</li>
+              <li>Image files with executable code (shell.gif)</li>
+            </ul>
+            
+            <p><strong>Analyzing b.jsp Content:</strong></p>
+            <p>Examination of b.jsp reveals malicious code patterns:</p>
+            <ul>
+              <li>Command execution capabilities</li>
+              <li>File upload/download functions</li>
+              <li>Database access code</li>
+              <li>Obfuscated code sections</li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>🚩 Web shell file extension: .jsp</strong>
+            </div>
+            
+            <p><strong>Web Shell Detection Commands:</strong></p>
+            <pre><code># Find recently modified web files
+forfiles /P C:\inetpub\wwwroot /S /D +01/01/2019 /C "cmd /c echo @path @fdate"
+
+# Search for suspicious strings in files
+findstr /S /I "eval(" C:\inetpub\wwwroot\*
+findstr /S /I "cmd.exe" C:\inetpub\wwwroot\*</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Web shells provide attackers with persistent access to compromised web servers. JSP files on Windows servers (typically running IIS) suggest Tomcat or similar Java application servers are present.</p>
+          </div>
+        </section>
+
+        <section id="network-forensics">
+          <h2>Network Forensics & IOCs</h2>
+          
+          <div class="level-solution">
+            <h3>HOSTS File Analysis</h3>
+            <p><strong>Objective:</strong> Identify DNS hijacking and malicious redirections.</p>
+            
+            <p>Examine the Windows HOSTS file at <code>C:\Windows\System32\drivers\etc\hosts</code>:</p>
+            <pre><code>10.2.2.2        update.microsoft.com 
+127.0.0.1       www.virustotal.com 
+127.0.0.1       www.www.com 
+127.0.0.1       dci.sophosupd.com 
+76.32.97.132    google.com
+76.32.97.132    www.google.com</code></pre>
+            
+            <p><strong>Suspicious Entries Identified:</strong></p>
+            <ul>
+              <li><strong>update.microsoft.com</strong> redirected to 10.2.2.2 (blocks updates)</li>
+              <li><strong>www.virustotal.com</strong> redirected to localhost (prevents malware scanning)</li>
+              <li><strong>dci.sophosupd.com</strong> redirected to localhost (blocks antivirus updates)</li>
+              <li><strong>google.com</strong> redirected to 76.32.97.132 (potential phishing)</li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>🚩 Malicious IP redirecting Google: 76.32.97.132</strong>
+            </div>
+            
+            <p><strong>HOSTS File Hijacking Impact:</strong></p>
+            <ul>
+              <li>Prevents Windows updates and security patches</li>
+              <li>Blocks access to security tools (VirusTotal, Sophos)</li>
+              <li>Redirects legitimate traffic to attacker infrastructure</li>
+              <li>Enables man-in-the-middle attacks</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>HOSTS file modification is a common malware persistence and defense evasion technique. Attackers use it to block security updates and redirect traffic to malicious servers.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Firewall Rule Analysis</h3>
+            <p><strong>Objective:</strong> Identify malicious firewall rules allowing unauthorized access.</p>
+            
+            <p><strong>Windows Firewall Investigation:</strong></p>
+            <ol>
+              <li>Open Windows Firewall with Advanced Security: <code>wf.msc</code></li>
+              <li>Navigate to Inbound Rules</li>
+              <li>Look for suspicious custom rules</li>
+              <li>Examine rule details for ports and programs</li>
+            </ol>
+            
+            <p><strong>Suspicious Rule Found:</strong></p>
+            <p>Rule Name: "Allow outside connections for developer"</p>
+            <ul>
+              <li><strong>Action:</strong> Allow</li>
+              <li><strong>Direction:</strong> Inbound</li>
+              <li><strong>Port:</strong> 1337</li>
+              <li><strong>Protocol:</strong> TCP</li>
+            </ul>
+            
+            <div class="flag-container">
+              <strong>🚩 Malicious firewall rule port: 1337</strong>
+            </div>
+            
+            <p><strong>Command Line Firewall Enumeration:</strong></p>
+            <pre><code># List all firewall rules
+netsh advfirewall firewall show rule name=all
+
+# Export firewall configuration
+netsh advfirewall export "C:\firewall-backup.wfw"
+
+# Check specific port
+netsh advfirewall firewall show rule name=all | findstr "1337"</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Attackers create firewall rules to ensure their backdoors remain accessible. Port 1337 is a well-known "leet speak" port often used by hackers. Legitimate developer access should use standard ports and proper authentication.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>DNS Cache Analysis</h3>
+            <p><strong>Objective:</strong> Examine DNS resolution history for indicators of compromise.</p>
+            
+            <p>Display the DNS resolver cache:</p>
+            <pre><code>ipconfig /displaydns</code></pre>
+            
+            <p><strong>DNS Cache Analysis:</strong></p>
+            <p>The DNS cache reveals recent domain resolutions, including:</p>
+            <div class="flag-container">
+              <strong>🚩 Suspicious domain in DNS cache: google.com</strong>
+            </div>
+            
+            <p>Cross-referencing with HOSTS file shows google.com was redirected to 76.32.97.132, indicating DNS hijacking was active.</p>
+            
+            <p><strong>Additional DNS Forensics Commands:</strong></p>
+            <pre><code># Clear DNS cache (for remediation)
+ipconfig /flushdns
+
+# Check DNS server configuration
+ipconfig /all | findstr "DNS"
+
+# View DNS client events
+Get-WinEvent -LogName "Microsoft-Windows-DNS-Client/Operational" -MaxEvents 100</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>DNS cache analysis can reveal communication with command and control servers, phishing domains, or evidence of DNS hijacking. Combined with HOSTS file analysis, it provides a complete picture of DNS-based attacks.</p>
+          </div>
+        </section>
+
+        <section id="summary">
+          <h2>Investigation Summary</h2>
+          
+          <div class="level-solution">
+            <h3>Complete Incident Timeline</h3>
+            <p><strong>Attack Chain Reconstruction:</strong></p>
+            
+            <ol>
+              <li><strong>Initial Compromise (Before 03/02/2019 4:04:49 PM):</strong> Attacker gained initial access</li>
+              <li><strong>Persistence Establishment:</strong> Created backdoor account (Jenny), modified HOSTS file</li>
+              <li><strong>Credential Theft (03/02/2019):</strong> Used Mimikatz to dump credentials</li>
+              <li><strong>Web Shell Deployment (03/02/2019 4:37 PM):</strong> Planted JSP web shells</li>
+              <li><strong>Defense Evasion:</strong> Added firewall rules, blocked security sites, created scheduled tasks</li>
+            </ol>
+            
+            <p><strong>All Flags Discovered:</strong></p>
+            <div class="flag-container">
+              <strong>System Information:</strong><br>
+              • OS Version: Windows Server 2016<br>
+              • Startup IP: 10.34.2.3<br><br>
+              
+              <strong>User Account Analysis:</strong><br>
+              • First Admin logon: Administrator<br>
+              • Admin group members: Guest, Jenny<br>
+              • Jenny password set: 03/02/2019<br>
+              • Jenny last logon: Never<br><br>
+              
+              <strong>Event Log Findings:</strong><br>
+              • John's logon: 03/02/2019 5:48:32 PM<br>
+              • Suspicious logon: 03/02/2019 4:04:49 PM<br><br>
+              
+              <strong>Malware & Persistence:</strong><br>
+              • Scheduled task: Clean File System<br>
+              • Malicious script: nc.ps1<br>
+              • Listening port: 1348<br>
+              • Credential tool: mimikatz<br>
+              • Web shell extension: .jsp<br><br>
+              
+              <strong>Network IOCs:</strong><br>
+              • Malicious Google IP: 76.32.97.132<br>
+              • Firewall rule port: 1337<br>
+              • DNS cache entry: google.com
+            </div>
+            
+            <p><strong>Indicators of Compromise (IOCs):</strong></p>
+            <ul>
+              <li><strong>Files:</strong> C:\TMP\nc.ps1, C:\TMP\mim.exe, C:\inetpub\wwwroot\b.jsp</li>
+              <li><strong>Registry:</strong> Scheduled task "Clean File System"</li>
+              <li><strong>Network:</strong> Port 1337 and 1348 listeners</li>
+              <li><strong>Accounts:</strong> Suspicious user "Jenny" with admin rights</li>
+              <li><strong>HOSTS:</strong> Multiple malicious redirections</li>
+            </ul>
+               </br>
+            <p><strong>Technical Skills Demonstrated:</strong></p>
+            <ul>
+              <li>Windows Event Log analysis and correlation</li>
+              <li>User account and privilege enumeration</li>
+              <li>Scheduled task forensics</li>
+              <li>Credential dumping tool identification</li>
+              <li>Web shell detection and analysis</li>
+              <li>HOSTS file forensics</li>
+              <li>Firewall rule analysis</li>
+              <li>DNS cache investigation</li>
+              <li>Timeline reconstruction</li>
+            </ul>
+        </br>
+            <p><strong>Incident Response Actions Required:</strong></p>
+            <ul>
+              <li><strong>Immediate:</strong>
+                <ul>
+                  <li>Isolate affected system from network</li>
+                  <li>Disable Jenny account</li>
+                  <li>Kill malicious processes and scheduled tasks</li>
+                  <li>Block malicious IPs at firewall</li>
+                </ul>
+              </li>
+              <li><strong>Short-term:</strong>
+                <ul>
+                  <li>Remove web shells from IIS directories</li>
+                  <li>Restore clean HOSTS file</li>
+                  <li>Remove malicious firewall rules</li>
+                  <li>Force password reset for all users</li>
+                </ul>
+              </li>
+              <li><strong>Long-term:</strong>
+                <ul>
+                  <li>Full malware scan and system rebuild</li>
+                  <li>Review all administrative accounts</li>
+                  <li>Implement enhanced monitoring</li>
+                  <li>Patch management and security hardening</li>
+                </ul>
+              </li>
+            </ul>
+               </br>
+            <p><strong>Lessons Learned:</strong></p>
+            <ul>
+              <li>Regular auditing of administrative accounts prevents backdoor persistence</li>
+              <li>HOSTS file monitoring detects DNS hijacking attempts</li>
+              <li>Scheduled task review identifies malicious persistence mechanisms</li>
+              <li>Web application directories require continuous monitoring</li>
+              <li>Firewall rule audits prevent unauthorized access</li>
+              <li>Event log analysis provides crucial timeline information</li>
+            </ul>
+          </div>
+        </section>
+      </article>
+      
+    </main>
+
+    <footer>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: September 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
+    </footer>
+  </div>
+</body>
+</html>
