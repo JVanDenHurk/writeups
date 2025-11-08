@@ -605,6 +605,22 @@ html {
   }
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin: 2em 0;
+  gap: 6px;
+}
+
+.pagination button:hover {
+  background: #eaeaea;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Print styles */
 @media print {
   body {
